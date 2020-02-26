@@ -3,4 +3,4 @@
 
 #include "panic.h"
 
-#endif // DEFER_H
+#endif  // DEFER_H

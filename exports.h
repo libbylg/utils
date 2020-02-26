@@ -10,9 +10,9 @@
 #define exports_h
 
 #if defined(__cplusplus)
-#define EXPORT_API  extern "C"
+#define EXPORT_API extern "C"
 #else
-#define EXPORT_API  extern
+#define EXPORT_API extern
 #endif
 
 #endif /* exports_h */

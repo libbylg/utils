@@ -5,7 +5,8 @@
 
 int main(int argc, char* argv[])
 {
-    struct token_cache_t cache = {TOKEN_CACHE_CONTENT_LEN_DEF, TOKEN_CACHE_FORWARD_LEN_DEF};
+    struct token_cache_t cache = {TOKEN_CACHE_CONTENT_LEN_DEF,
+                                  TOKEN_CACHE_FORWARD_LEN_DEF};
 
     struct token_reader_t reader = {
         "",
@@ -18,4 +19,4 @@ int main(int argc, char* argv[])
 
     token_parser_accept_space(&parser);
 }
-#endif // TOKEN_PARSER_TEST_C
+#endif  // TOKEN_PARSER_TEST_C

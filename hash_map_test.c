@@ -1,71 +1,76 @@
 #include "hash_map.h"
-#include "hash_map(str,int).h"
-
-
-#include "upc_assert_message.h"
-
 
 #include <string.h>
 
+#include "hash_map(str,int).h"
+#include "upc_assert_message.h"
 
 int main(int argc, char* argv[])
 {
-    //  ÔÙ³õ hash_map
+    //  å†åˆ hash_map
     struct hash_trait trait = {0};
     struct hash_map h = {0};
     hash_map_init(&h, hash_map_str_int_trait_init(&trait), 97);
 
-    struct hash_node* repl = hash_map_put(&h, (struct hash_node*)hash_map_str_int_entry_new("a", 1));
-    ASSERT_MESSAGE((NULL == repl), "·µ»ØÖµÎªNULL");
+    struct hash_node* repl =
+        hash_map_put(&h, (struct hash_node*)hash_map_str_int_entry_new("a", 1));
+    ASSERT_MESSAGE((NULL == repl), "è¿”å›å€¼ä¸ºNULL");
 
     struct hash_map_str_key str_key;
     hash_map_str_key_ref(&str_key, "a");
 
-    struct hash_map_str_int_entry* get_item = (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
-    ASSERT_MESSAGE((NULL != get_item), "·µ»ØÖµ²»ÄÜÎªNULL");
-    ASSERT_MESSAGE((1 == get_item->val), "·µ»ØµÄ node ±ØĞëÓëÌí¼ÓµÄÊ±ºòÒ»ÖÂ");
-    ASSERT_MESSAGE((1 == hash_map_size(&h)), "¸öÊı±ØĞëÕıÈ·");
+    struct hash_map_str_int_entry* get_item =
+        (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
+    ASSERT_MESSAGE((NULL != get_item), "è¿”å›å€¼ä¸èƒ½ä¸ºNULL");
+    ASSERT_MESSAGE((1 == get_item->val), "è¿”å›çš„ node å¿…é¡»ä¸æ·»åŠ çš„æ—¶å€™ä¸€è‡´");
+    ASSERT_MESSAGE((1 == hash_map_size(&h)), "ä¸ªæ•°å¿…é¡»æ­£ç¡®");
 
     hash_map_put(&h, (struct hash_node*)hash_map_str_int_entry_new("b", 2));
-    ASSERT_MESSAGE((2 == hash_map_size(&h)), "¸öÊı±ØĞëÕıÈ·");
+    ASSERT_MESSAGE((2 == hash_map_size(&h)), "ä¸ªæ•°å¿…é¡»æ­£ç¡®");
 
     hash_map_str_key_ref(&str_key, "b");
     get_item = (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
-    ASSERT_MESSAGE((NULL != get_item), "ÄÜ¹»»ñÈ¡³É¹¦");
-    ASSERT_MESSAGE((0 == strcmp(get_item->key.key, "b")), "key ÖµÒ»Ñù");
-    ASSERT_MESSAGE((get_item->val == 2), "val ÖµÒ»Ñù");
-
+    ASSERT_MESSAGE((NULL != get_item), "èƒ½å¤Ÿè·å–æˆåŠŸ");
+    ASSERT_MESSAGE((0 == strcmp(get_item->key.key, "b")), "key å€¼ä¸€æ ·");
+    ASSERT_MESSAGE((get_item->val == 2), "val å€¼ä¸€æ ·");
 
     hash_map_str_key_ref(&str_key, "b");
-    struct hash_map_str_int_entry* pop_entry = (struct hash_map_str_int_entry*)hash_map_pop(&h, &str_key);
-    ASSERT_MESSAGE((NULL != pop_entry), "É¾³ıµÄÊ±ºò£¬±»É¾³ıµÄÔªËØ»á±»·µ»Ø");
-    ASSERT_MESSAGE((0 == strcmp(pop_entry->key.key, "b")), "key ÖµÒ»Ñù");
-    ASSERT_MESSAGE((pop_entry->val == 2), "val ÖµÒ»Ñù");
-    ASSERT_MESSAGE((1 == hash_map_size(&h)), "¸öÊı±ØĞëÕıÈ·");
+    struct hash_map_str_int_entry* pop_entry =
+        (struct hash_map_str_int_entry*)hash_map_pop(&h, &str_key);
+    ASSERT_MESSAGE((NULL != pop_entry), "åˆ é™¤çš„æ—¶å€™ï¼Œè¢«åˆ é™¤çš„å…ƒç´ ä¼šè¢«è¿”å›");
+    ASSERT_MESSAGE((0 == strcmp(pop_entry->key.key, "b")), "key å€¼ä¸€æ ·");
+    ASSERT_MESSAGE((pop_entry->val == 2), "val å€¼ä¸€æ ·");
+    ASSERT_MESSAGE((1 == hash_map_size(&h)), "ä¸ªæ•°å¿…é¡»æ­£ç¡®");
 
     pop_entry = (struct hash_map_str_int_entry*)hash_map_pop(&h, &str_key);
-    ASSERT_MESSAGE((NULL == pop_entry), "µ±ÔªËØÒÑ¾­±»É¾³ıÊ±£¬ÖØĞÂÉ¾³ı»á·µ»ØNULL");
-    ASSERT_MESSAGE((1 == hash_map_size(&h)), "¸öÊı±ØĞëÕıÈ·");
+    ASSERT_MESSAGE((NULL == pop_entry),
+                   "å½“å…ƒç´ å·²ç»è¢«åˆ é™¤æ—¶ï¼Œé‡æ–°åˆ é™¤ä¼šè¿”å›NULL");
+    ASSERT_MESSAGE((1 == hash_map_size(&h)), "ä¸ªæ•°å¿…é¡»æ­£ç¡®");
 
     hash_map_str_key_ref(&str_key, "a");
     pop_entry = (struct hash_map_str_int_entry*)hash_map_pop(&h, &str_key);
-    ASSERT_MESSAGE((NULL != pop_entry), "É¾³ıµÄÊ±ºò£¬±»É¾³ıµÄÔªËØ»á±»·µ»Ø");
-    ASSERT_MESSAGE((0 == strcmp(pop_entry->key.key, "a")), "key ÖµÒ»Ñù");
-    ASSERT_MESSAGE((pop_entry->val == 1), "val ÖµÒ»Ñù");
-    ASSERT_MESSAGE((0 == hash_map_size(&h)), "¸öÊı±ØĞëÕıÈ·");
+    ASSERT_MESSAGE((NULL != pop_entry), "åˆ é™¤çš„æ—¶å€™ï¼Œè¢«åˆ é™¤çš„å…ƒç´ ä¼šè¢«è¿”å›");
+    ASSERT_MESSAGE((0 == strcmp(pop_entry->key.key, "a")), "key å€¼ä¸€æ ·");
+    ASSERT_MESSAGE((pop_entry->val == 1), "val å€¼ä¸€æ ·");
+    ASSERT_MESSAGE((0 == hash_map_size(&h)), "ä¸ªæ•°å¿…é¡»æ­£ç¡®");
 
     hash_map_str_key_ref(&str_key, "c");
-    (struct hash_map_str_int_entry*)hash_map_put(&h, (struct hash_node*)hash_map_str_int_entry_new("c", 3));
-    struct hash_map_str_int_entry* exist_entry = (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
-    ASSERT_MESSAGE((NULL != exist_entry), "·µ»ØÖµÎªNULL");
-    ASSERT_MESSAGE((exist_entry->val == 3), "val ÖµºÍ put Ê±µÄÖµÒ»Ñù");
-    struct hash_map_str_int_entry* rep2 = (struct hash_map_str_int_entry*)hash_map_put(&h, (struct hash_node*)hash_map_str_int_entry_new("c", 33));
-    ASSERT_MESSAGE((NULL != rep2), "·µ»ØÖµÎªNULL");
+    (struct hash_map_str_int_entry*)hash_map_put(
+        &h, (struct hash_node*)hash_map_str_int_entry_new("c", 3));
+    struct hash_map_str_int_entry* exist_entry =
+        (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
+    ASSERT_MESSAGE((NULL != exist_entry), "è¿”å›å€¼ä¸ºNULL");
+    ASSERT_MESSAGE((exist_entry->val == 3), "val å€¼å’Œ put æ—¶çš„å€¼ä¸€æ ·");
+    struct hash_map_str_int_entry* rep2 =
+        (struct hash_map_str_int_entry*)hash_map_put(
+            &h, (struct hash_node*)hash_map_str_int_entry_new("c", 33));
+    ASSERT_MESSAGE((NULL != rep2), "è¿”å›å€¼ä¸ºNULL");
     ASSERT_MESSAGE((exist_entry == rep2), "");
     exist_entry = (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
-    ASSERT_MESSAGE((exist_entry != rep2), "ĞÂ entry Ìæ»»ÀÏentry");
-    ASSERT_MESSAGE((exist_entry->val == 33), "val ±»¸ü»»ÎªĞÂÖµ");
-    ASSERT_MESSAGE((1 == hash_map_size(&h)), "Í¬ÃûµÄkeyÖ»´æÔÚÌæ»»£¬ËùÒÔÊıÁ¿Ó¦¸Ã²»±ä");
+    ASSERT_MESSAGE((exist_entry != rep2), "æ–° entry æ›¿æ¢è€entry");
+    ASSERT_MESSAGE((exist_entry->val == 33), "val è¢«æ›´æ¢ä¸ºæ–°å€¼");
+    ASSERT_MESSAGE((1 == hash_map_size(&h)),
+                   "åŒåçš„keyåªå­˜åœ¨æ›¿æ¢ï¼Œæ‰€ä»¥æ•°é‡åº”è¯¥ä¸å˜");
 
     return 0;
 }

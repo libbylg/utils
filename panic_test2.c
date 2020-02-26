@@ -1,6 +1,5 @@
 #include "panic.h"
 
-
 static void bar()
 {
     printf("bar enter\n");
@@ -17,15 +16,14 @@ static void foo()
     printf("foo leave\n");
 }
 
-extern int test2()
+extern int main(int argc, char* argv[])
 {
     int ret = 0;
     if (0 == ret) {
         printf("before foo\n");
         foo();
         printf("after  foo\n");
-    }
-    else {
+    } else {
         printf("catch  jump here\n");
     }
 

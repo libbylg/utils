@@ -15,10 +15,12 @@ static int line_reader_scan_callback_echo(void* ctx, struct line_reader_t* r)
     return 0;
 }
 
-extern int   test_cat_file(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-    const char* file = "/Users/baidu/baidu/svn/navi-qa-dev/tool/"
-        "BehaviorAnalysis/BehaviorAnalysis/behavior-history/behavior_parser.cpp";
+    const char* file =
+        "/Users/baidu/baidu/svn/navi-qa-dev/tool/"
+        "BehaviorAnalysis/BehaviorAnalysis/behavior-history/"
+        "behavior_parser.cpp";
     struct line_reader_t r;
 
     // 初始化
@@ -26,12 +28,12 @@ extern int   test_cat_file(int argc, char* argv[])
     if (0 != ret) {
         return -1;
     }
-    
+
     ret = line_reader_open(&r, file);
     if (0 != ret) {
         return -1;
     }
-    
+
     // 逐行读取
     while (0 == line_reader_next(&r)) {
         int ret = line_reader_scan_callback_echo(NULL, &r);
@@ -45,5 +47,3 @@ extern int   test_cat_file(int argc, char* argv[])
     line_reader_destroy(&r);
     return 0;
 }
-
-

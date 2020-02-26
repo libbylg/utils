@@ -7,28 +7,23 @@
 //
 #include "token.h"
 
-
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
-
 #ifndef ASSERT
-#define ASSERT   assert
-#endif//ASSERT
+#define ASSERT assert
+#endif  // ASSERT
 
-
-enum CHAR_TYPE : int
-{
-    CT_DIGIT    = 0x01,
-    CT_NAME     = 0x02, //  大小写字母,数字,点,中划线,下划线,
-    CT_NEWLINE  = 0x04, //  换行符号
-    CT_SPACE    = 0x08,
-    CT_OPSPLIT  = 0x10, //  允许竖线和中划线
-    CT_OPRCODE  = 0x20, //  只允许大小写字母和点
-    CT_PMSPLI   = 0x40, //  参数分隔符号: 中划线或者竖线
+enum CHAR_TYPE : int {
+    CT_DIGIT = 0x01,
+    CT_NAME = 0x02,     //  大小写字母,数字,点,中划线,下划线,
+    CT_NEWLINE = 0x04,  //  换行符号
+    CT_SPACE = 0x08,
+    CT_OPSPLIT = 0x10,  //  允许竖线和中划线
+    CT_OPRCODE = 0x20,  //  只允许大小写字母和点
+    CT_PMSPLI = 0x40,   //  参数分隔符号: 中划线或者竖线
 };
-
 
 static int default_char_maps[] = {
     /*  0    0x00         */ 0,
@@ -289,8 +284,8 @@ static int default_char_maps[] = {
     /*255    0xff         */ 0,
 };
 
-
-EXPORT_API int token_parser_init(struct token_parser_t* parser, struct token_reader_t* reader,
+EXPORT_API int token_parser_init(struct token_parser_t* parser,
+                                 struct token_reader_t* reader,
                                  struct token_cache_t* cache)
 {
     ASSERT(NULL != parser);
@@ -307,19 +302,19 @@ EXPORT_API int token_parser_init(struct token_parser_t* parser, struct token_rea
     parser->reader = reader;
     parser->end[0] = (uchar)('\n');
     parser->limit[0] = (uchar)('\n');
-    
+
     return 0;
 };
-
 
 EXPORT_API void token_parser_destroy(struct token_parser_t* parser)
 {
     ASSERT(NULL != parser);
 }
 
-
-//  bh_parser_fill_cache 函数仅仅用于填充缓冲区的数据，如果缓冲区的剩余空间小于特定的值，会尝试做一下数据空间搬移
-EXPORT_API uchar*   token_parser_fill_cache(struct token_parser_t* parser, int move_limit_size)
+//  bh_parser_fill_cache
+//  函数仅仅用于填充缓冲区的数据，如果缓冲区的剩余空间小于特定的值，会尝试做一下数据空间搬移
+EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser,
+                                          int move_limit_size)
 {
     //  当剩余数据较少时，做一次数据对齐
     int remain_data_len = (int)(parser->end - parser->pos);
@@ -331,34 +326,37 @@ EXPORT_API uchar*   token_parser_fill_cache(struct token_parser_t* parser, int m
         parser->end = parser->pos + remain_data_len;
         parser->end[0] = '\n';
     }
-    
+
     //  重新填充缓冲区
     int remain_buf_len = (int)(parser->limit - parser->end);
-    int fill_len = parser->reader->read(parser->reader, parser->end, remain_buf_len);
+    int fill_len =
+        parser->reader->read(parser->reader, parser->end, remain_buf_len);
     if (fill_len > 0) {
         parser->end += fill_len;
         parser->end[0] = '\n';
         return parser->pos;
     }
-    
+
     if (fill_len == 0) {
         return parser->pos;
     }
-    
+
     throw new bh_parse_error(1, "读取数据失败");
 }
 
-//  bh_parser_reserve 函数用于确保数据缓冲区至少有 reserve_size 个字节，除非已经没有更多数据。
-EXPORT_API uchar* token_parser_reserve(struct token_parser_t* parser, int reserve_size)
+//  bh_parser_reserve 函数用于确保数据缓冲区至少有 reserve_size
+//  个字节，除非已经没有更多数据。
+EXPORT_API uchar* token_parser_reserve(struct token_parser_t* parser,
+                                       int reserve_size)
 {
     uchar* pc = parser->pos;
     int remain_data_len = (int)(parser->end - pc);
-    
+
     //  如果缓冲区中剩余数据已经足够了，那么直接返回即可
     if (remain_data_len > reserve_size) {
         return pc;
     }
-    
+
     //  如果剩余数据不多，那么做一下搬移，然后重新填充
     return token_parser_fill_cache(parser, reserve_size);
 }
@@ -369,18 +367,18 @@ EXPORT_API uchar* token_accept_space(struct token_parser_t* parser)
     uchar* pc = parser->pos;
 
 TRY_AGAIN:
-    while (default_char_maps[ *pc ] & CT_SPACE) {
+    while (default_char_maps[*pc] & CT_SPACE) {
         pc++;
     }
 
-    if ((uchar)('\n') == pc[ 0 ]) {
+    if ((uchar)('\n') == pc[0]) {
         if (pc != parser->end) {
             pc++;
             goto TRY_AGAIN;
         } else {
-            parser->pos = pc;   //  设置为全部识别完毕，避免不必要的数据迁移
+            parser->pos = pc;  //  设置为全部识别完毕，避免不必要的数据迁移
             pc = token_parser_fill_cache(parser, parser->cache->ahead);
-            
+
             //  如果重新载入一次数据后，仍然没有有效数据，说明缓冲区已经空了
             if (parser->pos != parser->end) {
                 goto TRY_AGAIN;
@@ -392,11 +390,11 @@ TRY_AGAIN:
     return pc;
 }
 
-
-EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser, int pattern)
+EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser,
+                                             int pattern)
 {
     uchar* pc = token_parser_reserve(parser, parser->cache->ahead);
-    while (default_char_maps[ *pc ] & (pattern)) {
+    while (default_char_maps[*pc] & (pattern)) {
         pc++;
     }
 
@@ -407,30 +405,32 @@ EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser, int 
     return pc;
 }
 
-
-EXPORT_API uchar* token_accept_token_template(struct token_parser_t* parser, const char* tmpl)
+EXPORT_API uchar* token_accept_token_template(struct token_parser_t* parser,
+                                              const char* tmpl)
 {
     uchar* pc = token_parser_reserve(parser, parser->cache->ahead);
     while (*pc == (uchar)(*tmpl)) {
         tmpl++;
         pc++;
     }
-    
+
     if ((uchar)('\0') == *tmpl) {
         return pc;
     }
-    
+
     throw new token_parse_error(1, "不是期望的符号 '%s'", tmpl);
 }
 
-EXPORT_API int token_parser_error_vprintf(struct token_error_t* error, int id, const char* format, va_list va)
+EXPORT_API int token_parser_error_vprintf(struct token_error_t* error, int id,
+                                          const char* format, va_list va)
 {
     ASSERT(NULL != error);
     error->id = id;
     return vsnprintf(error->error, sizeof(error->error), format, va);
 }
 
-EXPORT_API int token_parser_error_printf(struct token_error_t* error, const char* format, ...)
+EXPORT_API int token_parser_error_printf(struct token_error_t* error,
+                                         const char* format, ...)
 {
     va_list va;
     va_start(va, format);
