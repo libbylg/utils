@@ -16,7 +16,8 @@ static void foo()
     printf("foo leave\n");
 }
 
-extern int main(int argc, char* argv[])
+
+int main(int argc, char* argv[])
 {
     int ret = 0;
     if (0 == ret) {

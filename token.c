@@ -418,7 +418,7 @@ EXPORT_API uchar* token_accept_token_template(struct token_parser_t* parser,
         return pc;
     }
 
-    throw new token_parse_error(1, "不是期望的符号 '%s'", tmpl);
+    panic(new token_parse_error(1, "不是期望的符号 '%s'", tmpl));
 }
 
 EXPORT_API int token_parser_error_vprintf(struct token_error_t* error, int id,
