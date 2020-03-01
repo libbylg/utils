@@ -5,11 +5,6 @@
 #include <stdio.h>
 
 
-//#define DEFER_CAT_(a, b) a##b
-//#define DEFER_NAME_(a) DEFER_CAT_(defer_, a)
-//#define DEFER_ATTR_ __attribute__((__unused__ __cleanup__(_defer_call)))
-//#define defer(block) DEFER_ATTR_ void (^DEFER_NAME_(__FUNC__##__LINE__##__COUNTER__))(void) = ^block
-
 struct defer_list {
     struct defer_list* parent;
     jmp_buf jbuf;
@@ -28,9 +23,9 @@ static void defer_init() __attribute__((constructor))
     top_defer.block = ^{};
     int ret = setjmp(top_defer.jbuf);
     if (0 != ret) {
-        printf("defer_init - abort before\n");
+        //printf("defer_init - abort before\n");
         abort();
-        printf("defer_init - abort after\n");
+        //printf("defer_init - abort after\n");
     }
 }
 
@@ -56,11 +51,11 @@ static void* recover()
 
 static void defer_call_normal(struct defer_list* this_defer)
 {
-    printf("defer_call_normal - enter: last_defer=%p, this_defer=%p\n", last_defer, this_defer);
+    //printf("defer_call_normal - enter: last_defer=%p, this_defer=%p\n", last_defer, this_defer);
 
     //  如果 error 与 error 自己的地址相等, 说明已经已经被恢复过, 此时 block 已经在 panic 之后被调用过了, 直接返回即可
     if (this_defer->error == &(this_defer->error)) {
-        printf("defer_call_normal - leave(1)\n");
+        //printf("defer_call_normal - leave(1)\n");
         return;
     }
 
@@ -69,7 +64,7 @@ static void defer_call_normal(struct defer_list* this_defer)
 
     //  如果 error 与 this_defer 相等, 说明没有抛出异常, 属于正常处理流程
     if (this_defer->error == this_defer) {
-        printf("defer_call_normal - leave(2)\n");
+        //printf("defer_call_normal - leave(2)\n");
         return;
     }
 
@@ -78,7 +73,7 @@ static void defer_call_normal(struct defer_list* this_defer)
     //  此时,意味着 panic 还需要忘上层传播
     if (this_defer->error != this_defer) {
         last_defer = last_defer->parent; //  将 last_defer 更新为 parent
-        printf("defer_call_normal - begin re-panic\n");
+        //printf("defer_call_normal - begin re-panic\n");
         panic(this_defer->error);
     }
 }

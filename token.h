@@ -17,14 +17,16 @@
 typedef unsigned char uchar;
 typedef unsigned int uint;
 
-//! `struct token_parser_error` defined a object to save to information of the
+//! `struct token_error_t` defined a object to save to information of the
 //! parser error.
 struct token_error_t {
     int id;
     char error[500];
 };
-EXPORT_API void raise_token_error(struct token_error_t* error, int id, const char* format, ...);
-EXPORT_API void raise_token_errorv(struct token_error_t* error, int id, const char* format, va_list va);
+EXPORT_API int token_error_vprintf(struct token_error_t* error, int id, const char* format, va_list va);
+EXPORT_API int token_error_printf(struct token_error_t* error, const char* format, ...);
+EXPORT_API void token_error_raise(struct token_error_t* error, int id, const char* format, ...);
+EXPORT_API void token_error_raisev(struct token_error_t* error, int id, const char* format, va_list va);
 
 //!  `struct token_parser_reader_t` defined the interface to read more data
 //!  from the data source.

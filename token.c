@@ -11,19 +11,23 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "panic.h"
+
 #ifndef ASSERT
 #define ASSERT assert
 #endif  // ASSERT
 
+// clang-format off
 enum CHAR_TYPE : int {
-    CT_DIGIT = 0x01,
-    CT_NAME = 0x02,     //  大小写字母,数字,点,中划线,下划线,
-    CT_NEWLINE = 0x04,  //  换行符号
-    CT_SPACE = 0x08,
-    CT_OPSPLIT = 0x10,  //  允许竖线和中划线
-    CT_OPRCODE = 0x20,  //  只允许大小写字母和点
-    CT_PMSPLI = 0x40,   //  参数分隔符号: 中划线或者竖线
+    CT_DIGIT    = 0x01,
+    CT_NAME     = 0x02,    //  大小写字母,数字,点,中划线,下划线,
+    CT_NEWLINE  = 0x04, //  换行符号
+    CT_SPACE    = 0x08,
+    CT_OPSPLIT  = 0x10, //  允许竖线和中划线
+    CT_OPRCODE  = 0x20, //  只允许大小写字母和点
+    CT_PMSPLI   = 0x40,  //  参数分隔符号: 中划线或者竖线
 };
+// clang-format on
 
 static int default_char_maps[] = {
     /*  0    0x00         */ 0,
@@ -341,7 +345,7 @@ EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser,
         return parser->pos;
     }
 
-    throw new bh_parse_error(1, "读取数据失败");
+    token_error_raise(&(parser->error), 1, "读取数据失败");
 }
 
 //  bh_parser_reserve 函数用于确保数据缓冲区至少有 reserve_size
@@ -399,7 +403,7 @@ EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser,
     }
 
     if (parser->pos == pc) {
-        throw new token_parse_error(1, "不期望的符号(pattern=0x%X)", pattern);
+        token_error_raise(&(parser->error), 1, "不期望的符号(pattern=0x%X)", pattern);
     }
 
     return pc;
@@ -418,23 +422,32 @@ EXPORT_API uchar* token_accept_token_template(struct token_parser_t* parser,
         return pc;
     }
 
-    panic(new token_parse_error(1, "不是期望的符号 '%s'", tmpl));
+    token_error_raise(&(parser->error), 1, "不是期望的符号 '%s'", tmpl);
 }
 
-EXPORT_API int token_parser_error_vprintf(struct token_error_t* error, int id,
-                                          const char* format, va_list va)
+EXPORT_API int token_error_vprintf(struct token_error_t* error, int id, const char* format, va_list va)
 {
     ASSERT(NULL != error);
     error->id = id;
     return vsnprintf(error->error, sizeof(error->error), format, va);
 }
 
-EXPORT_API int token_parser_error_printf(struct token_error_t* error,
-                                         const char* format, ...)
+EXPORT_API int token_error_printf(struct token_error_t* error, const char* format, ...)
 {
     va_list va;
     va_start(va, format);
     int ret = vsnprintf(error->error, sizeof(error->error), format, va);
     va_end(va);
     return ret;
+}
+
+EXPORT_API void token_error_raise(struct token_error_t* error, int id, const char* format, ...)
+{
+    ASSERT(NULL != error);
+    va_list va;
+    va_start(va, format);
+    error->id = id;
+    (void)vsnprintf(error->error, sizeof(error->error), format, va);
+    va_end(va);
+    panic(error);
 }
