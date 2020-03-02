@@ -89,18 +89,29 @@ struct test_t {
 };
 // clang-format on
 
+struct test_message_t {
+    struct test_t* test;
+};
+
+typedef void (*test_output_t)(struct test_t* t, const char* file, int line, int type, const char* desc, int len);
+
 
 //----------------------------------------------------------------------------------------------------------------------
 // clang-format off
 //! `test_register` 函数用于将 `test` 对象 注册到名称为 `group` 的组下面.
 //! \param `test` 可以为一个"测试",也可以为一个"测试组". 
 //! \param `group` 如果指定为"", 表示注册到全局的测试组下面
-EXPORT_API int                  test_register(struct test_t* test, const char* group);
+EXPORT_API int                  test_register(struct test_t* t, const char* group);
 EXPORT_API struct test_t*       test_find(const char* name);
+EXPORT_API struct test_t*       test_self();
 EXPORT_API test_ctx_t           test_ctx_get();
 EXPORT_API void                 test_ctx_set(test_ctx_t ctx);
 EXPORT_API test_event_t         test_event_get(struct test_t* t);
 EXPORT_API void                 test_event_set(struct test_t* t, test_event_t event);
+EXPORT_API void                 test_result_savev(const char* file, int line, int type, const char* format, void* va);
+EXPORT_API void                 test_result_save(const char* file, int line, int type, const char* format, ...);
+EXPORT_API void                 test_result_raise(const char* file, int line, int type, const char* format, ...);
+EXPORT_API void                 test_result_raisev(const char* file, int line, int type, const char* format, void* va);
 EXPORT_API void                 test_access(int (*callback)(void* ctx, struct test_t* test), void* ctx);
 EXPORT_API int                  test_run(const char* group_pattern, const char* case_pattern);
 // clang-format on
@@ -224,33 +235,42 @@ EXPORT_API int                  test_run(const char* group_pattern, const char* 
     }
 
 
-// TEST(test-object, group-object)
-// TEST_GROUP(group-object, group-string)
-// TEST_EVENT(event-object, group-object)
-// clang-format off
-#define TEST(...)       _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_DEFINE2, _TEST_DEFINE1)(__VA_ARGS__)
-#define TEST_GROUP(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_GROUP_DEFINE2, _TEST_GROUP_DEFINE1)(__VA_ARGS__)
-#define TEST_EVENT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_EVENT_DEFINE2, _TEST_EVENT_DEFINE1)(__VA_ARGS__)
-// clang-format on
-
-
 //----------------------------------------------------------------------------------------------------------------------
-#define _TEST_ASSERT2(EXPR, MESSAGE) printf("%s:%s\n", #EXPR, MESSAGE);
-#define _TEST_ASSERT1(EXPR) printf("%s\n", #EXPR);
-
-//! We need to redefine the `ASSERT`
-#if defined(ASSERT)
-#undef ASSERT
-#endif //ASSERT
-#define ASSERT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_ASSERT2, _TEST_ASSERT1)(__VA_ARGS__)
+#define _TEST_ASSERT2(EXPR, MESSAGE)                                                                                   \
+    ({                                                                                                                 \
+        if (!(EXPR)) {                                                                                                 \
+            test_result_raise(__FILE__, __LINE__, 0, "%s <-- %s", #EXPR, MESSAGE)                                      \
+        }                                                                                                              \
+    })
+#define _TEST_ASSERT1(EXPR)                                                                                            \
+    ({                                                                                                                 \
+        if (!(EXPR)) {                                                                                                 \
+            test_result_raise(__FILE__, __LINE__, 0, "%s", #EXPR);                                                     \
+        }                                                                                                              \
+    })
 
 
 //----------------------------------------------------------------------------------------------------------------------
 #define _TEST_RUN2(pgroup, ptest) test_run(pgroup, ptest)
 #define _TEST_RUN1(pgroup) test_run(pgroup, "*")
 #define _TEST_RUN0() test_run("*", "*")
-#define TEST_RUN(...) _TEST_MACRO_MAP3(__VA_ARGS__, _TEST_RUN2, _TEST_RUN1, _TEST_RUN0)(__VA_ARGS__)
 
+
+//----------------------------------------------------------------------------------------------------------------------
+// clang-format off
+// TEST(test-object, group-object)
+// TEST_GROUP(group-object, group-string)
+// TEST_EVENT(event-object, group-object)
+#define TEST(...)       _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_DEFINE2, _TEST_DEFINE1)(__VA_ARGS__)
+#define TEST_GROUP(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_GROUP_DEFINE2, _TEST_GROUP_DEFINE1)(__VA_ARGS__)
+#define TEST_EVENT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_EVENT_DEFINE2, _TEST_EVENT_DEFINE1)(__VA_ARGS__)
+#define TEST_RUN(...)   _TEST_MACRO_MAP3(__VA_ARGS__, _TEST_RUN2, _TEST_RUN1, _TEST_RUN0)(__VA_ARGS__)
+//! We need to redefine the `ASSERT`
+#if defined(ASSERT)
+#undef ASSERT
+#endif //ASSERT
+#define ASSERT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_ASSERT2, _TEST_ASSERT1)(__VA_ARGS__)
+// clang-format on
 
 //======================================================================================================================
 #endif // test_H

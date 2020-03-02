@@ -11,6 +11,7 @@
 struct test_control_t {
     struct test_t   root;
     struct test_t*  current;
+    test_output_t   output;
     jmp_buf         trap;
 };
 // clang-format on
@@ -19,6 +20,7 @@ struct test_control_t {
 static struct test_control_t global_test_control = {{0}, 0, {0}};
 
 
+static void test_output_default(struct test_t* t, const char* file, int line, int type, const char* desc, int len);
 _TEST_INITIALIZER(global_test_group_init)
 {
     global_test_control.root.next = &(global_test_control.root);
@@ -32,6 +34,8 @@ _TEST_INITIALIZER(global_test_group_init)
     global_test_control.root.proc = NULL;
 
     global_test_control.current = NULL;
+
+    global_test_control.output = test_output_default;
 }
 
 static inline struct test_t* test_insert(struct test_t* n, struct test_t* prev, struct test_t* next)
@@ -145,6 +149,12 @@ EXPORT_API int test_register(struct test_t* test, const char* groupName)
 }
 
 
+EXPORT_API struct test_t* test_self()
+{
+    return global_test_control.current;
+}
+
+
 struct test_find_callback_context {
     const char* name;
     struct test_t* result;
@@ -214,7 +224,6 @@ static int test_event_wrap(struct test_t* t, int eventid, void* param)
 
     int ret = setjmp(global_test_control.trap);
     if (0 != ret) {
-        //TODO 遇到异常了;
         return -1;
     }
 
@@ -226,7 +235,6 @@ static int test_proc_wrap(struct test_t* t)
 {
     int ret = setjmp(global_test_control.trap);
     if (0 != ret) {
-        //TODO 遇到异常了;
         return -1;
     }
 
@@ -286,10 +294,48 @@ EXPORT_API int test_run(const char* group_pattern, const char* test_pattern)
 }
 
 
-#if defined(TEST_AUTO_RUN)
-int main(int argc, char* argv[])
+static void test_output_default(struct test_t* t, const char* file, int line, int type, const char* desc, int len)
 {
-    TEST_RUN();
-    return 0;
+    //TODO impl `test_result_save_impl`
 }
-#endif
+
+
+EXPORT_API void test_result_savev(const char* file, int line, int type, const char* format, void* va)
+{
+    char desc[1024] = {0};
+    int len = vsnprintf(desc, sizeof(desc), format, va);
+    if (len <= 0) {
+        desc[0] = '\0';
+        len = 0;
+    }
+
+    global_test_control.output(global_test_control.current, file, line, type, desc, len);
+}
+
+
+EXPORT_API void test_result_save(const char* file, int line, int type, const char* format, ...)
+{
+    va_list va;
+    va_start(va, format);
+    test_result_savev(file, line, type, format, va);
+    va_end(va);
+}
+
+
+EXPORT_API void test_result_raisev(const char* file, int line, int type, const char* format, void* va)
+{
+    //! Save the test result
+    test_result_savev(file, line, type, format, va);
+
+    //! Jump to the trap to run continue
+    longjmp(global_test_control.trap, 1);
+}
+
+
+EXPORT_API void test_result_raise(const char* file, int line, int type, const char* format, ...)
+{
+    va_list va;
+    va_start(va, format);
+    test_result_raisev(file, line, type, format, va);
+    va_end(va);
+}

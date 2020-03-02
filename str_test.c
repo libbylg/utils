@@ -1,6 +1,6 @@
 #include "str.h"
 
-
+#define TEST_AUTO_RUN
 #include "test.h"
 
 
