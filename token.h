@@ -42,8 +42,7 @@ struct token_reader_t {
 };
 
 #define TOKEN_CACHE_FORWARD_LEN_DEF (32)
-#define TOKEN_CACHE_CONTENT_LEN_DEF \
-    ((4096 - sizeof(void*)) - TOKEN_CACHE_FORWARD_LEN_DEF)
+#define TOKEN_CACHE_CONTENT_LEN_DEF ((4096 - sizeof(void*)) - TOKEN_CACHE_FORWARD_LEN_DEF)
 struct token_cache_t {
     int content;      //! The content length of the cache;
     int forward;      //! How many chars will be reserved, before fill the cache
@@ -63,16 +62,12 @@ struct token_parser_t {
     struct token_cache_t* cache;
 };
 
-EXPORT_API int token_parser_init(struct token_parser_t* parser,
-                                 struct token_reader_t* reader,
+EXPORT_API int token_parser_init(struct token_parser_t* parser, struct token_reader_t* reader,
                                  struct token_cache_t* cache);
 EXPORT_API void token_parser_destroy(struct token_parser_t* parser);
-EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser,
-                                          int limit_size);
+EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser, int limit_size);
 EXPORT_API uchar* token_parser_accept_space(struct token_parser_t* parser);
-EXPORT_API uchar* token_parser_accept_token_pattern(
-    struct token_parser_t* parser, int pattern);
-EXPORT_API uchar* token_parser_accept_token_template(
-    struct token_parser_t* parser, const char* tmpl);
+EXPORT_API uchar* token_parser_accept_token_pattern(struct token_parser_t* parser, int pattern);
+EXPORT_API uchar* token_parser_accept_token_template(struct token_parser_t* parser, const char* tmpl);
 
 #endif /* behavior_hpp */

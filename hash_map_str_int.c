@@ -1,16 +1,15 @@
 #include "hash_map_str_int.h"
 
-
-#include "hash.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "hash.h"
+
 #ifndef ASSERT_MESSAGE
 #define ASSERT_MESSAGE(expr, msg) assert(expr)
-#endif //ASSERT_MESSAGE
+#endif  // ASSERT_MESSAGE
 
 static void* hash_map_str_int_entry_key(struct hash_trait* trait, struct hash_node* node)
 {
@@ -39,17 +38,13 @@ static int hash_map_str_int_entry_equal(struct hash_trait* trait, void* key1, vo
 }
 
 
-
-
-void            hash_map_str_int_entry_del(struct hash_map_str_int_entry* entry)
+void hash_map_str_int_entry_del(struct hash_map_str_int_entry* entry)
 {
-    if (NULL == entry)
-    {
+    if (NULL == entry) {
         return;
     }
 
-    if (NULL != entry->key.key)
-    {
+    if (NULL != entry->key.key) {
         free(entry->key.key);
     }
 
@@ -57,17 +52,14 @@ void            hash_map_str_int_entry_del(struct hash_map_str_int_entry* entry)
 }
 
 
-
-
-struct hash_map_str_key*    hash_map_str_key_init(struct hash_map_str_key* key, char* str)
+struct hash_map_str_key* hash_map_str_key_init(struct hash_map_str_key* key, char* str)
 {
     ASSERT_MESSAGE((NULL != key), "key 必须由外部保证有效性");
-    str = (NULL == str)?"":str;
+    str = (NULL == str) ? "" : str;
 
     size_t key_len = strlen(str) + 1;
     key->key = (char*)malloc(key_len);
-    if (NULL == key->key)
-    {
+    if (NULL == key->key) {
         key->key = NULL;
         return NULL;
     }
@@ -77,10 +69,10 @@ struct hash_map_str_key*    hash_map_str_key_init(struct hash_map_str_key* key, 
     return key;
 }
 
-struct hash_map_str_key*    hash_map_str_key_ref(struct hash_map_str_key* key, char* str)
+struct hash_map_str_key* hash_map_str_key_ref(struct hash_map_str_key* key, char* str)
 {
     ASSERT_MESSAGE((NULL != key), "key 必须由外部保证有效性");
-    key->key  = str;
+    key->key = str;
     key->hash = DJB2Hash(str);
     return key;
 }
@@ -88,17 +80,16 @@ struct hash_map_str_key*    hash_map_str_key_ref(struct hash_map_str_key* key, c
 
 struct hash_map_str_int_entry* hash_map_str_int_entry_new(char* key, int val)
 {
-    struct hash_map_str_int_entry* entry = (struct hash_map_str_int_entry*)malloc(sizeof(struct hash_map_str_int_entry));
-    if (NULL == entry)
-    {
+    struct hash_map_str_int_entry* entry =
+        (struct hash_map_str_int_entry*)malloc(sizeof(struct hash_map_str_int_entry));
+    if (NULL == entry) {
         return NULL;
     }
 
     entry->node.next = NULL;
     entry->node.prev = NULL;
 
-    if (NULL == hash_map_str_key_init(&(entry->key), key))
-    {
+    if (NULL == hash_map_str_key_init(&(entry->key), key)) {
         free(entry);
         return NULL;
     }
@@ -109,12 +100,10 @@ struct hash_map_str_int_entry* hash_map_str_int_entry_new(char* key, int val)
 }
 
 
-struct hash_trait*  hash_map_str_int_trait_init(struct hash_trait* trait)
+struct hash_trait* hash_map_str_int_trait_init(struct hash_trait* trait)
 {
-    trait->key   = hash_map_str_int_entry_key;
-    trait->hash  = hash_map_str_int_entry_hash;
+    trait->key = hash_map_str_int_entry_key;
+    trait->hash = hash_map_str_int_entry_hash;
     trait->equal = hash_map_str_int_entry_equal;
     return trait;
 }
-
-

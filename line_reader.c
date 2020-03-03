@@ -43,9 +43,7 @@ extern int line_reader_init(struct line_reader_t* r, int buf_init_size)
     r->buf = buf;
     r->limit = r->buf + (buf_init_size - sizeof(void*));
     r->line = r->buf;
-    r->eol =
-        r->line -
-        1;  //  这个地方比较特殊，因为当识别到下一行的时候，line总是从eol+1的地方开始计算的
+    r->eol = r->line - 1;  //  这个地方比较特殊，因为当识别到下一行的时候，line总是从eol+1的地方开始计算的
     r->end = r->buf;
 
     //  其他成员初始化
@@ -74,9 +72,7 @@ extern int line_reader_open(struct line_reader_t* r, const char* filename)
 
     //  重置所有动态变化的指针
     r->line = r->buf;
-    r->eol =
-        r->line -
-        1;  //  这个地方比较特殊，因为当识别到下一行的时候，line总是从eol+1的地方开始计算的
+    r->eol = r->line - 1;  //  这个地方比较特殊，因为当识别到下一行的时候，line总是从eol+1的地方开始计算的
     r->end = r->buf;
 
     //  其他成员初始化

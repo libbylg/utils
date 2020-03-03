@@ -6,7 +6,9 @@
 
 TEST(Test_normal)
 {
-    ASSERT(1 == 2);
+    EXPECT(0 == wildcmp("*.sh", "test.sh"));
+    EXPECT(0 == wildcmp("*.*", "test.sh"));
+    EXPECT(0 != wildcmp("*.*", "foobar"));
 }
 
 

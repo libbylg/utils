@@ -288,8 +288,7 @@ static int default_char_maps[] = {
     /*255    0xff         */ 0,
 };
 
-EXPORT_API int token_parser_init(struct token_parser_t* parser,
-                                 struct token_reader_t* reader,
+EXPORT_API int token_parser_init(struct token_parser_t* parser, struct token_reader_t* reader,
                                  struct token_cache_t* cache)
 {
     ASSERT(NULL != parser);
@@ -317,8 +316,7 @@ EXPORT_API void token_parser_destroy(struct token_parser_t* parser)
 
 //  bh_parser_fill_cache
 //  函数仅仅用于填充缓冲区的数据，如果缓冲区的剩余空间小于特定的值，会尝试做一下数据空间搬移
-EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser,
-                                          int move_limit_size)
+EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser, int move_limit_size)
 {
     //  当剩余数据较少时，做一次数据对齐
     int remain_data_len = (int)(parser->end - parser->pos);
@@ -333,8 +331,7 @@ EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser,
 
     //  重新填充缓冲区
     int remain_buf_len = (int)(parser->limit - parser->end);
-    int fill_len =
-        parser->reader->read(parser->reader, parser->end, remain_buf_len);
+    int fill_len = parser->reader->read(parser->reader, parser->end, remain_buf_len);
     if (fill_len > 0) {
         parser->end += fill_len;
         parser->end[0] = '\n';
@@ -350,8 +347,7 @@ EXPORT_API uchar* token_parser_fill_cache(struct token_parser_t* parser,
 
 //  bh_parser_reserve 函数用于确保数据缓冲区至少有 reserve_size
 //  个字节，除非已经没有更多数据。
-EXPORT_API uchar* token_parser_reserve(struct token_parser_t* parser,
-                                       int reserve_size)
+EXPORT_API uchar* token_parser_reserve(struct token_parser_t* parser, int reserve_size)
 {
     uchar* pc = parser->pos;
     int remain_data_len = (int)(parser->end - pc);
@@ -394,8 +390,7 @@ TRY_AGAIN:
     return pc;
 }
 
-EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser,
-                                             int pattern)
+EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser, int pattern)
 {
     uchar* pc = token_parser_reserve(parser, parser->cache->ahead);
     while (default_char_maps[*pc] & (pattern)) {
@@ -409,8 +404,7 @@ EXPORT_API uchar* token_accept_token_pattern(struct token_parser_t* parser,
     return pc;
 }
 
-EXPORT_API uchar* token_accept_token_template(struct token_parser_t* parser,
-                                              const char* tmpl)
+EXPORT_API uchar* token_accept_token_template(struct token_parser_t* parser, const char* tmpl)
 {
     uchar* pc = token_parser_reserve(parser, parser->cache->ahead);
     while (*pc == (uchar)(*tmpl)) {

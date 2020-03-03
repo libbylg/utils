@@ -23,4 +23,4 @@ void hash_map_str_int_entry_del(struct hash_map_str_int_entry* entry);
 
 struct hash_trait* hash_map_str_int_trait_init(struct hash_trait* trait);
 
-#endif //__hash_map_str_ptr_H_
+#endif  //__hash_map_str_ptr_H_

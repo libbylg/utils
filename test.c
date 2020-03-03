@@ -17,10 +17,13 @@ struct test_control_t {
 // clang-format on
 
 
+static const char* global_test_type_names[] = {"Pass",          "Setup failed", "Teardown failed", "Assert failed",
+                                               "Expect failed", "Catch fault",  "Memory leak"};
+
 static struct test_control_t global_test_control = {{0}, 0, {0}};
 
 
-static void test_output_default(struct test_t* t, const char* file, int line, int type, const char* desc, int len);
+static void test_output_default(struct test_message_t* message);
 _TEST_INITIALIZER(global_test_group_init)
 {
     global_test_control.root.next = &(global_test_control.root);
@@ -69,12 +72,10 @@ static int test_wildcmp(const char* wild, const char* str)
             }
             mp = wild;
             cp = str + 1;
-        }
-        else if ((*wild == *str) || (*wild == '?')) {
+        } else if ((*wild == *str) || (*wild == '?')) {
             wild++;
             str++;
-        }
-        else {
+        } else {
             wild = mp;
             str = cp++;
         }
@@ -123,7 +124,7 @@ EXPORT_API int test_register(struct test_t* test, const char* groupName)
     struct test_t* tgroup = test_find(groupName);
     if (NULL == tgroup) {
         tgroup = malloc(sizeof(struct test_t));
-        //TODO tgroup null-check
+        // TODO tgroup null-check
         tgroup->next = NULL;
         tgroup->prev = NULL;
         tgroup->parent = NULL;
@@ -138,8 +139,7 @@ EXPORT_API int test_register(struct test_t* test, const char* groupName)
 
     if (NULL != tgroup->childs) {
         test_insert(test, tgroup->childs->prev, tgroup->childs->next);
-    }
-    else {
+    } else {
         tgroup->childs = test;
     }
 
@@ -165,7 +165,7 @@ static int test_find_callback(void* c, struct test_t* t)
     struct test_find_callback_context* ctx = (struct test_find_callback_context*)c;
     if (0 == strcmp(ctx->name, t->name)) {
         ctx->result = t;
-        return -1; //  we found
+        return -1;  //  we found
     }
 
     return 0;
@@ -248,18 +248,18 @@ static void test_run_test(struct test_t* t)
 
     int ret = test_event_wrap(t, TEST_EVENT_SETUP, NULL);
     if (0 != ret) {
-        //TODO record failed of `test_event_wrap` at `TEST_EVENT_SETUP`
+        test_message("", -1, TYPE_SETUP_FAIL, "", "");
         return;
     }
 
-    ret = test_proc_wrap(t);
+    int proc_result = test_proc_wrap(t);
     if (0 != ret) {
-        //TODO record failed of `test_proc_wrap`
+        test_message("", -1, TYPE_PASS, "", "");
     }
 
     ret = test_event_wrap(t, TEST_EVENT_TEARDOWN, NULL);
     if (0 != ret) {
-        //TODO record failed of `test_event_wrap` at `TEST_EVENT_TEARDOWN`
+        test_message("", -1, TYPE_TEARDOWN_FAIL, "", "");
     }
 }
 
@@ -294,13 +294,13 @@ EXPORT_API int test_run(const char* group_pattern, const char* test_pattern)
 }
 
 
-static void test_output_default(struct test_t* t, const char* file, int line, int type, const char* desc, int len)
+static void test_output_default(struct test_message_t* message)
 {
-    //TODO impl `test_result_save_impl`
+    printf("%s(%d): [%s] %s\n", message->file, message->line, global_test_type_names[message->type], message->text);
 }
 
 
-EXPORT_API void test_result_savev(const char* file, int line, int type, const char* format, void* va)
+EXPORT_API void test_messagev(const char* file, int line, int type, const char* msg, const char* format, void* va)
 {
     char desc[1024] = {0};
     int len = vsnprintf(desc, sizeof(desc), format, va);
@@ -309,33 +309,44 @@ EXPORT_API void test_result_savev(const char* file, int line, int type, const ch
         len = 0;
     }
 
-    global_test_control.output(global_test_control.current, file, line, type, desc, len);
+    struct test_message_t* message = malloc(sizeof(struct test_message_t) + (len + 1));
+    message->next = message;
+    message->prev = message;
+    message->test = global_test_control.current;
+    message->file = file;
+    message->message = msg;
+    message->line = line;
+    message->type = type;
+    message->len = len;
+    memcpy(message->text, desc, len + 1);
+
+    global_test_control.output(message);
 }
 
 
-EXPORT_API void test_result_save(const char* file, int line, int type, const char* format, ...)
+EXPORT_API void test_message(const char* file, int line, int type, const char* msg, const char* format, ...)
 {
     va_list va;
     va_start(va, format);
-    test_result_savev(file, line, type, format, va);
+    test_messagev(file, line, type, msg, format, va);
     va_end(va);
 }
 
 
-EXPORT_API void test_result_raisev(const char* file, int line, int type, const char* format, void* va)
+EXPORT_API void test_raisev(const char* file, int line, int type, const char* msg, const char* format, void* va)
 {
     //! Save the test result
-    test_result_savev(file, line, type, format, va);
+    test_messagev(file, line, type, msg, format, va);
 
     //! Jump to the trap to run continue
     longjmp(global_test_control.trap, 1);
 }
 
 
-EXPORT_API void test_result_raise(const char* file, int line, int type, const char* format, ...)
+EXPORT_API void test_raise(const char* file, int line, int type, const char* msg, const char* format, ...)
 {
     va_list va;
     va_start(va, format);
-    test_result_raisev(file, line, type, format, va);
+    test_raisev(file, line, type, msg, format, va);
     va_end(va);
 }

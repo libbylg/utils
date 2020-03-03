@@ -19,8 +19,7 @@
 //
 // }
 
-struct hash_map* hash_map_init(struct hash_map* h, struct hash_trait* trait,
-                               int buckets_size)
+struct hash_map* hash_map_init(struct hash_map* h, struct hash_trait* trait, int buckets_size)
 {
     if (buckets_size <= 0) {
         return NULL;
@@ -74,8 +73,7 @@ struct hash_node* hash_map_put(struct hash_map* h, struct hash_node* n)
 
     struct hash_node* old_node = NULL;
 
-    for (struct hash_node* node = bucket->first; NULL != node;
-         node = node->next) {
+    for (struct hash_node* node = bucket->first; NULL != node; node = node->next) {
         void* key2 = h->trait->key(h->trait, node);
         if (h->trait->equal(h->trait, key, key2)) {
             if (n == node) {
@@ -118,8 +116,7 @@ struct hash_node* hash_map_get(struct hash_map* h, void* key)
     uint32_t index = hash % h->buckets_cap;
 
     struct hash_bucket* bucket = h->buckets + index;
-    for (struct hash_node* node = bucket->first; NULL != node;
-         node = node->next) {
+    for (struct hash_node* node = bucket->first; NULL != node; node = node->next) {
         void* key2 = h->trait->key(h->trait, node);
         if (h->trait->equal(h->trait, key, key2)) {
             return node;
@@ -135,8 +132,7 @@ struct hash_node* hash_map_pop(struct hash_map* h, void* key)
     uint32_t index = hash % h->buckets_cap;
 
     struct hash_bucket* bucket = h->buckets + index;
-    for (struct hash_node* node = bucket->first; NULL != node;
-         node = node->next) {
+    for (struct hash_node* node = bucket->first; NULL != node; node = node->next) {
         void* key2 = h->trait->key(h->trait, node);
         if (h->trait->equal(h->trait, key, key2)) {
             if (node->prev != node) {

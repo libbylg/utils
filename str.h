@@ -5,4 +5,4 @@
 
 EXPORT_API int wildcmp(const char* wild, const char* string);
 
-#endif //str_H
+#endif  // str_H

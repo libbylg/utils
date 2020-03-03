@@ -5,8 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-    struct token_cache_t cache = {TOKEN_CACHE_CONTENT_LEN_DEF,
-                                  TOKEN_CACHE_FORWARD_LEN_DEF};
+    struct token_cache_t cache = {TOKEN_CACHE_CONTENT_LEN_DEF, TOKEN_CACHE_FORWARD_LEN_DEF};
 
     struct token_reader_t reader = {
         "",

@@ -19,7 +19,7 @@ EXPORT_API int wildcmp(const char *wild, const char *string)
 
     while ((*string) && (*wild != '*')) {
         if ((*wild != *string) && (*wild != '?')) {
-            return 0;
+            return -1;
         }
         wild++;
         string++;
@@ -28,16 +28,14 @@ EXPORT_API int wildcmp(const char *wild, const char *string)
     while (*string) {
         if (*wild == '*') {
             if (!*++wild) {
-                return 1;
+                return 0;
             }
             mp = wild;
             cp = string + 1;
-        }
-        else if ((*wild == *string) || (*wild == '?')) {
+        } else if ((*wild == *string) || (*wild == '?')) {
             wild++;
             string++;
-        }
-        else {
+        } else {
             wild = mp;
             string = cp++;
         }
@@ -46,5 +44,5 @@ EXPORT_API int wildcmp(const char *wild, const char *string)
     while (*wild == '*') {
         wild++;
     }
-    return !*wild;
+    return (*wild ? -1 : 0);
 }

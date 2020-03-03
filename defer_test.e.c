@@ -8,8 +8,6 @@
 # 1 "./test.h" 1
 
 
-
-
 # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/assert.h" 1 3 4
 # 42 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/assert.h" 3 4
 # 1 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h" 1 3 4
@@ -21,16 +19,15 @@
 # 675 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/cdefs.h" 2 3 4
 # 43 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/assert.h" 2 3 4
 # 76 "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/assert.h" 3 4
-void __assert_rtn(const char *, const char *, int, const char *) __attribute__((noreturn)) __attribute__((__disable_tail_calls__));
+void __assert_rtn(const char*, const char*, int, const char*) __attribute__((noreturn))
+__attribute__((__disable_tail_calls__));
 
-void __eprintf(const char *, const char *, unsigned, const char *) __attribute__((noreturn));
+void __eprintf(const char*, const char*, unsigned, const char*) __attribute__((noreturn));
 # 6 "./test.h" 2
 # 31 "./test.h"
 typedef unsigned long uintptr_t;
 
 _Static_assert(sizeof(uintptr_t) == sizeof(void*), "check the size");
-
-
 
 
 typedef unsigned int uint32_t;
@@ -74,8 +71,6 @@ extern struct test_t global_test_group;
 extern struct test_t* global_test;
 
 
-
-
 extern struct test_t* test_register(struct test_t* test, const char* group);
 extern struct test_t* test_find(const char* name);
 extern struct test_t* test_flags_set(struct test_t* t, uint32_t flags);
@@ -89,21 +84,34 @@ extern int test_run(const char* group_pattern, const char* case_pattern);
 extern char _TEST_FLAGS_TEMPLATE[8];
 # 2 "defer_test.c" 2
 # 17 "defer_test.c"
-static struct test_t hello_group; static void hello_group_init() __attribute__((constructor)) { hello_group.node.next = &(hello_group.node); hello_group.node.prev = &(hello_group.node); hello_group.node.parent = &(hello_group.node); hello_group.node.childs = &(hello_group.node); hello_group.flags = TEST_FLAG_GROUP; hello_group.name = GROUPSTR; hello_group.context = (0); hello_group.event = (0); hello_group.proc = (0); test_register(&(hello_group), ""); };
+static struct test_t hello_group;
+static void hello_group_init() __attribute__((constructor))
+{
+    hello_group.node.next = &(hello_group.node);
+    hello_group.node.prev = &(hello_group.node);
+    hello_group.node.parent = &(hello_group.node);
+    hello_group.node.childs = &(hello_group.node);
+    hello_group.flags = TEST_FLAG_GROUP;
+    hello_group.name = GROUPSTR;
+    hello_group.context = (0);
+    hello_group.event = (0);
+    hello_group.proc = (0);
+    test_register(&(hello_group), "");
+};
 
 static void Test_Sample();
 static struct test_t Test_Sample_test;
 static void Test_Sample_test_init() __attribute__((constructor))
 {
-Test_Sample_test.node.next = &(Test_Sample_test);
-Test_Sample_test.node.prev = &(Test_Sample_test);
-Test_Sample_test.node.parent = &(Test_Sample_test);
-Test_Sample_test.node.childs = &(Test_Sample_test);
-Test_Sample_test.flags = TEST_FLAG_TEST;
-Test_Sample_test.name = "Test_Sample";
-Test_Sample_test.context = (0);
-Test_Sample_test.event = (0);
-Test_Sample_test.proc = Test_Sample;
+    Test_Sample_test.node.next = &(Test_Sample_test);
+    Test_Sample_test.node.prev = &(Test_Sample_test);
+    Test_Sample_test.node.parent = &(Test_Sample_test);
+    Test_Sample_test.node.childs = &(Test_Sample_test);
+    Test_Sample_test.flags = TEST_FLAG_TEST;
+    Test_Sample_test.name = "Test_Sample";
+    Test_Sample_test.context = (0);
+    Test_Sample_test.event = (0);
+    Test_Sample_test.proc = Test_Sample;
 test_register(&(Test_Sample_test), "defer_test.c"));
 }
 static void Test_Sample()

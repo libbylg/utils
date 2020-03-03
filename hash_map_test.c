@@ -1,11 +1,12 @@
 //  clang-format off
 #include "hash_map.h"
+
 #include <assert.h>
 #include <string.h>
 
 #ifndef ASSERT_MESSAGE
 #define ASSERT_MESSAGE(expr, msg) assert(expr)
-#endif //ASSERT_MESSAGE
+#endif  // ASSERT_MESSAGE
 
 #include "hash_map_str_int.h"
 
@@ -23,8 +24,7 @@ int main(int argc, char* argv[])
     struct hash_map_str_key str_key;
     hash_map_str_key_ref(&str_key, "a");
 
-    struct hash_map_str_int_entry* get_item =
-        (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
+    struct hash_map_str_int_entry* get_item = (struct hash_map_str_int_entry*)hash_map_get(&h, &str_key);
     ASSERT_MESSAGE((NULL != get_item), "返回值不能为NULL");
     ASSERT_MESSAGE((1 == get_item->val), "返回的 node 必须与添加的时候一致");
     ASSERT_MESSAGE((1 == hash_map_size(&h)), "个数必须正确");
@@ -46,8 +46,7 @@ int main(int argc, char* argv[])
     ASSERT_MESSAGE((1 == hash_map_size(&h)), "个数必须正确");
 
     pop_entry = (struct hash_map_str_int_entry*)hash_map_pop(&h, &str_key);
-    ASSERT_MESSAGE((NULL == pop_entry),
-                   "当元素已经被删除时，重新删除会返回NULL");
+    ASSERT_MESSAGE((NULL == pop_entry), "当元素已经被删除时，重新删除会返回NULL");
     ASSERT_MESSAGE((1 == hash_map_size(&h)), "个数必须正确");
 
     hash_map_str_key_ref(&str_key, "a");
