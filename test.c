@@ -138,7 +138,7 @@ EXPORT_API int test_register(struct test_t* test, const char* groupName)
     }
 
     if (NULL != tgroup->childs) {
-        test_insert(test, tgroup->childs->prev, tgroup->childs->next);
+        test_insert(test, tgroup->childs->prev, tgroup->childs);
     } else {
         tgroup->childs = test;
     }
@@ -273,6 +273,7 @@ static int test_run_callback(void* c, struct test_t* t)
     struct test_run_callback_context* ctx = (struct test_run_callback_context*)c;
     if ((0 == (t->flags & TEST_FLAG_GROUP)) && (0 == test_wildcmp(ctx->group_pattern, t->parent->name))) {
         if (0 == test_wildcmp(ctx->group_pattern, t->name)) {
+            printf("running: %s\n", t->name);
             test_run_test(t);
             return 0;
         }
