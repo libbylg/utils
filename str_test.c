@@ -43,10 +43,6 @@ TEST(Test_mixin)
     ASSERT(0 == wildcmp("?a*b", "mab"));
     ASSERT(0 == wildcmp("?a*b", "maxxxxb"));
     ASSERT(0 != wildcmp("?a*b", "axxxxb"));
-}
-
-int main(int argc, char* argv[])
-{
-    TEST_RUN();
-    return 0;
+    ASSERT(0 != wildcmp("a?*b", "ab"));
+    ASSERT(0 == wildcmp("a?*b", "acb"));
 }

@@ -5,19 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "upc_assert_message.h"
-
-//
-//
-// struct hash_trait* hash_trait_init_string  (struct hash_trait* trait)
-// {
-//
-// }
-//
-// struct hash_trait* hash_trait_init_int     (struct hash_trait* trait)
-// {
-//
-// }
 
 struct hash_map* hash_map_init(struct hash_map* h, struct hash_trait* trait, int buckets_size)
 {

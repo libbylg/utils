@@ -11,6 +11,7 @@
 struct test_control_t {
     struct test_t   root;
     struct test_t*  current;
+    int             action;
     test_output_t   output;
     jmp_buf         trap;
 };
@@ -20,7 +21,7 @@ struct test_control_t {
 static const char* global_test_type_names[] = {"Pass",          "Setup failed", "Teardown failed", "Assert failed",
                                                "Expect failed", "Catch fault",  "Memory leak"};
 
-static struct test_control_t global_test_control = {{0}, 0, {0}};
+static struct test_control_t global_test_control = {{0}};
 
 
 static void test_output_default(struct test_message_t* message);
@@ -88,10 +89,31 @@ static int test_wildcmp(const char* wild, const char* str)
 }
 
 
+EXPORT_API struct test_t* test_init(struct test_t* t, const char* name, test_proc_t proc)
+{
+    t->next = NULL;
+    t->prev = NULL;
+    t->parent = NULL;
+    t->childs = NULL;
+    t->result = NULL;
+    t->flags = 0;
+    t->name = name;
+    t->context = 0;
+    t->event = NULL;
+    t->proc = proc;
+
+    return t;
+}
+
+
 EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), void* ctx)
 {
-    struct test_t* curr = &(global_test_control.root);
-    while (curr) {
+    if (NULL == global_test_control.root.childs) {
+        return;
+    }
+    struct test_t* curr = global_test_control.root.childs;
+
+    while (curr != NULL) {
         int ret = callback(ctx, curr);
         if (0 != ret) {
             return;
@@ -103,18 +125,19 @@ EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), voi
             continue;
         }
 
-        //  如果兄弟节点没有了就回退到父节点
-        if (NULL == curr->parent) {
-            return;
-        }
-        if (curr->next == curr->parent->childs) {
+
+        //! 如果当前层级没有下一个节点了,那么就回到上层继续看上层是否有下一个节点
+        while (curr && (NULL == curr->next)) {
             curr = curr->parent;
         }
 
-        //  如果兄弟节点还有,就找到兄弟节点
-        if (NULL != curr) {
-            curr = curr->next;
+        //! 已经回溯到最顶层了
+        if (NULL == curr) {
+            break;
         }
+
+        //! 回溯之后继续找下一个兄弟节点
+        curr = curr->next;
     }
 }
 
@@ -134,7 +157,7 @@ EXPORT_API int test_register(struct test_t* test, const char* groupName)
         tgroup->context = 0;
         tgroup->event = NULL;
         tgroup->proc = NULL;
-        test_register(tgroup, "");
+        test_register(tgroup, groupName);
     }
 
     if (NULL != tgroup->childs) {
@@ -180,7 +203,7 @@ EXPORT_API struct test_t* test_find(const char* name)
 }
 
 
-EXPORT_API test_ctx_t test_ctx_get()
+EXPORT_API test_ctx_t test_ctx()
 {
     if (0 != global_test_control.current->context) {
         return global_test_control.current->context;
@@ -195,19 +218,24 @@ EXPORT_API void test_ctx_set(test_ctx_t ctx)
 }
 
 
-EXPORT_API test_event_t test_event_get(struct test_t* t)
+EXPORT_API enum TEST_ACTION test_action()
 {
-    if (NULL == t) {
-        return NULL;
-    }
-
-    if (NULL == t->event) {
-        return test_event_get(t->parent);
-    }
-
-    return t->event;
+    return global_test_control.action;
 }
 
+
+static test_event_t test_event_get(struct test_t* t)
+{
+    if (NULL != t->event) {
+        return t->event;
+    }
+
+    if (NULL != t->parent) {
+        return t->parent->event;
+    }
+
+    return NULL;
+}
 
 EXPORT_API void test_event_set(struct test_t* t, test_event_t event)
 {
@@ -222,6 +250,8 @@ static int test_event_wrap(struct test_t* t, int eventid, void* param)
         return 0;
     }
 
+    global_test_control.action = TEST_ACTION_SETUP;
+
     int ret = setjmp(global_test_control.trap);
     if (0 != ret) {
         return -1;
@@ -233,6 +263,8 @@ static int test_event_wrap(struct test_t* t, int eventid, void* param)
 
 static int test_proc_wrap(struct test_t* t)
 {
+    global_test_control.action = TEST_ACTION_TESTING;
+
     int ret = setjmp(global_test_control.trap);
     if (0 != ret) {
         return -1;
@@ -246,20 +278,20 @@ static void test_run_test(struct test_t* t)
 {
     global_test_control.current = t;
 
-    int ret = test_event_wrap(t, TEST_EVENT_SETUP, NULL);
+    int ret = test_event_wrap(t, TEST_ACTION_SETUP, NULL);
     if (0 != ret) {
-        test_message("", -1, TYPE_SETUP_FAIL, "", "");
+        test_message("", -1, TEST_MESSAGE_SETUP_FAIL, "", "");
         return;
     }
 
     int proc_result = test_proc_wrap(t);
-    if (0 != ret) {
-        test_message("", -1, TYPE_PASS, "", "");
+    if (0 != proc_result) {
+        test_message("", -1, TEST_MESSAGE_PASS, "", "");
     }
 
-    ret = test_event_wrap(t, TEST_EVENT_TEARDOWN, NULL);
+    ret = test_event_wrap(t, TEST_ACTION_TEARDOWN, NULL);
     if (0 != ret) {
-        test_message("", -1, TYPE_TEARDOWN_FAIL, "", "");
+        test_message("", -1, TEST_MESSAGE_TEARDOWN_FAIL, "", "");
     }
 }
 
@@ -313,7 +345,6 @@ EXPORT_API void test_messagev(const char* file, int line, int type, const char* 
     struct test_message_t* message = malloc(sizeof(struct test_message_t) + (len + 1));
     message->next = message;
     message->prev = message;
-    message->test = global_test_control.current;
     message->file = file;
     message->message = msg;
     message->line = line;
@@ -351,3 +382,12 @@ EXPORT_API void test_raise(const char* file, int line, int type, const char* msg
     test_raisev(file, line, type, msg, format, va);
     va_end(va);
 }
+
+
+#if defined(TEST_AUTO_RUN)
+int main(int argc, char* argv[])
+{
+    TEST_RUN();
+    return 0;
+}
+#endif

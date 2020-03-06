@@ -5,8 +5,10 @@ project(utils LANGUAGES C)
 SET(UT_SRC
     test.h
     test.c
-    static_assert.h
+#    static_assert.h
     )
+
+SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -DTEST_AUTO_RUN)
 
 #add_executable(test
 #    ${UT_SRC}
@@ -28,15 +30,17 @@ SET(UT_SRC
 #    token_test.c
 #    )
 
-#add_executable(hash_map
-#    #${UT_SRC}
-#    hash_map.h
-#    hash_map.c
-#    hash.h
-#    hash_map_str_int.h
-#    hash_map_str_int.c
-#    hash_map_test.c
-#    )
+add_executable(hash_map
+    ${UT_SRC}
+    hash_map.h
+    hash_map.c
+    hash.h
+    hash_map_str_int.h
+    hash_map_str_int.c
+    hash_map_test.c
+    hash_map_test.c.c
+
+    )
 
 
 #add_executable(panic
@@ -70,9 +74,9 @@ SET(UT_SRC
 #    )
 
 
-add_executable(str
-    ${UT_SRC}
-    str.h
-    str.c
-    str_test.c
-    )
+#add_executable(str
+#    ${UT_SRC}
+#    str.h
+#    str.c
+#    str_test.c
+#    )

@@ -2,9 +2,6 @@
 #define test_H
 
 
-//#include <assert.h>
-
-
 //  `STATIC_ASSERT` is the compile time assertion.
 #ifndef STATIC_ASSERT
 #if defined(__cplusplus)
@@ -58,69 +55,94 @@ typedef unsigned short uint16_t;  //  TODO need to check 32bit/64bit
 STATIC_ASSERT(sizeof(uint16_t) == 2, "check the size")
 #endif  //__uint16_t_defined
 
+
 //! Some flags for `test_t`.
-enum TEST_FLAGS {
+enum TEST_FLAG {
     TEST_FLAG_GROUP = 0x0001,
     TEST_FLAG_DYNAMIC = 0x8000,
 };
 
 
-enum TEST_MESSAGE_TYPE {
-    TYPE_PASS = 0,
-    TYPE_SETUP_FAIL = 1,
-    TYPE_TEARDOWN_FAIL = 2,
-    TYPE_ASSERT_FAIL = 3,
-    TYPE_EXPECT_FAIL = 4,
-    TYPE_CATCH_FAULT = 5,
-    TYPE_MEMORY_LEAK = 6,
-
-    TYPE_INTERNAL_ERROR,
+//! The message type for testing.
+enum TEST_MESSAGE {
+    TEST_MESSAGE_PASS = 0,
+    TEST_MESSAGE_SETUP_FAIL = 1,
+    TEST_MESSAGE_TEARDOWN_FAIL = 2,
+    TEST_MESSAGE_ASSERT_FAIL = 3,
+    TEST_MESSAGE_EXPECT_FAIL = 4,
+    TEST_MESSAGE_CATCH_FAULT = 5,
+    TEST_MESSAGE_MEMORY_LEAK = 6,
+    TEST_MESSAGE_INTERNAL_ERROR = 7,
 };
 
 
-enum {
-    TEST_EVENT_SETUP = 0,
-    TEST_EVENT_TEARDOWN = 1,
+//  The result of the testing
+enum TEST_RESULT {
+    TEST_RESULT_PASS,    //! Successfuly and do not have any exceptional
+    TEST_RESULT_WARNING, //! Succes, but have some warning
+    TEST_RESULT_FAIL,    //! Not pass the test
+    TEST_RESULT_FAULT,   //! Hit some fault
 };
 
+
+//! What is the testing freamewoek doing now.
+enum TEST_ACTION {
+    TEST_ACTION_SETUP = 0,
+    TEST_ACTION_TESTING = 1,
+    TEST_ACTION_TEARDOWN = 2,
+};
+
+
+struct test_message_t;
+struct test_result_t;
+struct test_t;
 
 typedef uintptr_t test_ctx_t;
 
 typedef uint32_t test_flags_t;
 
-typedef void (*test_event_t)(test_ctx_t* ctx, int event, void* param);
+typedef void (*test_event_t)();
 
 typedef void (*test_proc_t)();
 
-// clang-format off
-struct test_t {
-    struct test_t*  next;
-    struct test_t*  prev;
-    struct test_t*  parent;
-    struct test_t*  childs;
-    uint32_t        flags;
-    const char*     name;
-    test_ctx_t      context;
-    test_event_t    event;
-    test_proc_t     proc;
-};
-// clang-format on
+typedef void (*test_output_t)(struct test_message_t* message);
 
 // clang-format off
 struct test_message_t {
     struct test_message_t*  next;
     struct test_message_t*  prev;
-    struct test_t*          test;
     const char*             message;
     const char*             file;
     int                     line;
     uint16_t                type;
     uint16_t                len;
-    char                    text[0];
+    char*                   text;
 };
 // clang-format on
 
-typedef void (*test_output_t)(struct test_message_t* message);
+// clang-format off
+struct test_result_t {
+    struct test_t*          test;
+    int                     result;
+    struct test_message_t*  cause;
+};
+// clang-format on
+
+
+// clang-format off
+struct test_t {
+    struct test_t*          next;
+    struct test_t*          prev;
+    struct test_t*          parent;
+    struct test_t*          childs;
+    struct test_result_t*   result;
+    uint32_t                flags;
+    const char*             name;
+    test_ctx_t              context;
+    test_event_t            event;
+    test_proc_t             proc;
+};
+// clang-format on
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -128,12 +150,13 @@ typedef void (*test_output_t)(struct test_message_t* message);
 //! `test_register` 函数用于将 `test` 对象 注册到名称为 `group` 的组下面.
 //! \param `test` 可以为一个"测试",也可以为一个"测试组". 
 //! \param `group` 如果指定为"", 表示注册到全局的测试组下面
+EXPORT_API struct test_t*   test_init(struct test_t* t, const char* name, test_proc_t proc);
 EXPORT_API int              test_register(struct test_t* t, const char* group);
 EXPORT_API struct test_t*   test_find(const char* name);
 EXPORT_API struct test_t*   test_self();
-EXPORT_API test_ctx_t       test_ctx_get();
+EXPORT_API test_ctx_t       test_ctx();
 EXPORT_API void             test_ctx_set(test_ctx_t ctx);
-EXPORT_API test_event_t     test_event_get(struct test_t* t);
+EXPORT_API enum TEST_ACTION test_action();
 EXPORT_API void             test_event_set(struct test_t* t, test_event_t event);
 EXPORT_API void             test_messagev(const char* file, int line, int type, const char* msg, const char* format, void* va);
 EXPORT_API void             test_message(const char* file, int line, int type, const char* msg, const char* format, ...);
@@ -171,21 +194,22 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
 
 
 //----------------------------------------------------------------------------------------------------------------------
-#define _TEST_EVENT_DEFINE1(EVENTNAME)                              \
-    static void EVENTNAME(test_ctx_t* ctx, int event, void* param); \
-    _TEST_INITIALIZER(EVENTNAME##_event_init)                       \
-    {                                                               \
-        test_event_set((EVENTNAME), __FILE__);                      \
-    }                                                               \
-    static void name(test_ctx_t* ctx, int event, void* param)
+#define _TEST_EVENT_DEFINE1(EVENTNAME)                                                                                 \
+    static void EVENTNAME();                                                                                           \
+    _TEST_INITIALIZER(EVENTNAME##_event_init)                                                                          \
+    {                                                                                                                  \
+        struct test_t* group = test_find(__FILE__);                                                                    \
+        test_event_set((EVENTNAME), group);                                                                            \
+    }                                                                                                                  \
+    static void EVENTNAME()
 
-#define _TEST_EVENT_DEFINE2(EVENTNAME, TARGET)                      \
-    static void EVENTNAME(test_ctx_t* ctx, int event, void* param); \
-    _TEST_INITIALIZER(EVENTNAME##_event_init)                       \
-    {                                                               \
-        test_event_set((EVENTNAME), (TARGET##_target).name);        \
-    }                                                               \
-    static void name(test_ctx_t* ctx, int event, void* param)
+#define _TEST_EVENT_DEFINE2(TARGET, EVENTNAME)                                                                         \
+    static void EVENTNAME();                                                                                           \
+    _TEST_INITIALIZER(EVENTNAME##_event_init)                                                                          \
+    {                                                                                                                  \
+        test_event_set(&(TARGET##_target), (EVENTNAME));                                                               \
+    }                                                                                                                  \
+    static void EVENTNAME()
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -194,35 +218,17 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t TESTNAME##_target;                                                                            \
     _TEST_INITIALIZER(TESTNAME##_target_init)                                                                          \
     {                                                                                                                  \
-        TESTNAME##_target.next = &(TESTNAME##_target);                                                                 \
-        TESTNAME##_target.prev = &(TESTNAME##_target);                                                                 \
-        TESTNAME##_target.parent = NULL;                                                                               \
-        TESTNAME##_target.childs = NULL;                                                                               \
-        TESTNAME##_target.flags = 0;                                                                                   \
-        TESTNAME##_target.name = #TESTNAME;                                                                            \
-        TESTNAME##_target.context = 0;                                                                                 \
-        TESTNAME##_target.event = NULL;                                                                                \
-        TESTNAME##_target.proc = (TESTNAME);                                                                           \
-        test_register(&(TESTNAME##_target), __FILE__);                                                                 \
+        test_register(test_init(&(TESTNAME##_target), #TESTNAME, (TESTNAME)), __FILE__);                               \
     }                                                                                                                  \
     static void TESTNAME()
 
 
-#define _TEST_DEFINE2(TESTNAME, GROUP)                                                                                 \
+#define _TEST_DEFINE2(GROUP, TESTNAME)                                                                                 \
     static void TESTNAME();                                                                                            \
     static struct test_t TESTNAME##_target;                                                                            \
     _TEST_INITIALIZER(TESTNAME##_target_init)                                                                          \
     {                                                                                                                  \
-        TESTNAME##_target.next = &(TESTNAME##_target);                                                                 \
-        TESTNAME##_target.prev = &(TESTNAME##_target);                                                                 \
-        TESTNAME##_target.parent = NULL;                                                                               \
-        TESTNAME##_target.childs = NULL;                                                                               \
-        TESTNAME##_target.flags = 0;                                                                                   \
-        TESTNAME##_target.name = #TESTNAME;                                                                            \
-        TESTNAME##_target.context = 0;                                                                                 \
-        TESTNAME##_target.event = NULL;                                                                                \
-        TESTNAME##_target.proc = (TESTNAME);                                                                           \
-        test_register(&(TESTNAME##_target), ((GROUP##_target).name));                                                  \
+        test_register(test_init(&(TESTNAME##_target), #TESTNAME, (TESTNAME)), ((GROUP##_target).name));                \
     }                                                                                                                  \
     static void TESTNAME()
 
@@ -232,16 +238,7 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t GROUPNAME##_target;                                                                           \
     _TEST_INITIALIZER(GROUPNAME##_target_init)                                                                         \
     {                                                                                                                  \
-        GROUPNAME##_target.next = &(GROUPNAME##_target);                                                               \
-        GROUPNAME##_target.prev = &(GROUPNAME##_target);                                                               \
-        GROUPNAME##_target.parent = NULL;                                                                              \
-        GROUPNAME##_target.childs = NULL;                                                                              \
-        GROUPNAME##_target.flags = TEST_FLAG_GROUP;                                                                    \
-        GROUPNAME##_target.name = __FILE__;                                                                            \
-        GROUPNAME##_target.context = 0;                                                                                \
-        GROUPNAME##_target.event = NULL;                                                                               \
-        GROUPNAME##_target.proc = NULL;                                                                                \
-        test_register(&(GROUPNAME##_target), "");                                                                      \
+        test_register(test_init(&(GROUPNAME##_target), __FILE__, NULL), "");                                           \
     }
 
 
@@ -249,16 +246,7 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t GROUPNAME##_target;                                                                           \
     _TEST_INITIALIZER(GROUPNAME##_target_init)                                                                         \
     {                                                                                                                  \
-        GROUPNAME##_target.next = &(GROUPNAME##_target);                                                               \
-        GROUPNAME##_target.prev = &(GROUPNAME##_target);                                                               \
-        GROUPNAME##_target.parent = NULL;                                                                              \
-        GROUPNAME##_target.childs = NULL;                                                                              \
-        GROUPNAME##_target.flags = TEST_FLAG_GROUP;                                                                    \
-        GROUPNAME##_target.name = (GROUPSTR);                                                                          \
-        GROUPNAME##_target.context = 0;                                                                                \
-        GROUPNAME##_target.event = NULL;                                                                               \
-        GROUPNAME##_target.proc = NULL;                                                                                \
-        test_register(&(GROUPNAME##_target), "");                                                                      \
+        test_register(test_init(&(GROUPNAME##_target), (GROUPSTR), NULL), "");                                         \
     }
 
 
@@ -266,26 +254,26 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
 #define _TEST_ASSERT2(EXPR, MESSAGE)                                                                                   \
     ({                                                                                                                 \
         if (!(EXPR)) {                                                                                                 \
-            test_raise(__FILE__, __LINE__, TYPE_ASSERT_FAIL, (MESSAGE), "%s", #EXPR);                                  \
+            test_raise(__FILE__, __LINE__, TEST_MESSAGE_ASSERT_FAIL, (MESSAGE), "%s", #EXPR);                          \
         }                                                                                                              \
     })
 #define _TEST_ASSERT1(EXPR)                                                                                            \
     ({                                                                                                                 \
         if (!(EXPR)) {                                                                                                 \
-            test_raise(__FILE__, __LINE__, TYPE_ASSERT_FAIL, "", "%s", #EXPR);                                         \
+            test_raise(__FILE__, __LINE__, TEST_MESSAGE_ASSERT_FAIL, "", "%s", #EXPR);                                 \
         }                                                                                                              \
     })
 
 #define _TEST_EXPECT2(EXPR, MESSAGE)                                                                                   \
     ({                                                                                                                 \
         if (!(EXPR)) {                                                                                                 \
-            test_message(__FILE__, __LINE__, TYPE_EXPECT_FAIL, (MESSAGE), "%s", #EXPR);                                \
+            test_message(__FILE__, __LINE__, TEST_RESULT_EXPECT_FAIL, (MESSAGE), "%s", #EXPR);                         \
         }                                                                                                              \
     })
 #define _TEST_EXPECT1(EXPR)                                                                                            \
     ({                                                                                                                 \
         if (!(EXPR)) {                                                                                                 \
-            test_message(__FILE__, __LINE__, TYPE_EXPECT_FAIL, "", "%s", #EXPR);                                       \
+            test_message(__FILE__, __LINE__, TEST_RESULT_EXPECT_FAIL, "", "%s", #EXPR);                                \
         }                                                                                                              \
     })
 
@@ -304,15 +292,15 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
 
 //----------------------------------------------------------------------------------------------------------------------
 // clang-format off
-// TEST(test-object, group-object)
-// TEST_GROUP(group-object, group-string)
-// TEST_EVENT(event-object, group-object)
+// TEST([group-object], test-object)
+// TEST_GROUP([group-object], group-string)
+// TEST_EVENT([test-object|group-object], event-object)
 #define TEST(...)       _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_DEFINE2, _TEST_DEFINE1)(__VA_ARGS__)
 #define TEST_GROUP(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_GROUP_DEFINE2, _TEST_GROUP_DEFINE1)(__VA_ARGS__)
 #define TEST_EVENT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_EVENT_DEFINE2, _TEST_EVENT_DEFINE1)(__VA_ARGS__)
 #define TEST_RUN(...)   _TEST_MACRO_MAP3(__VA_ARGS__, _TEST_RUN2, _TEST_RUN1, _TEST_RUN0)(__VA_ARGS__)
-#define ASSERT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_ASSERT2, _TEST_ASSERT1)(__VA_ARGS__)
-#define EXPECT(...) _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_EXPECT2, _TEST_EXPECT1)(__VA_ARGS__)
+#define ASSERT(...)     _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_ASSERT2, _TEST_ASSERT1)(__VA_ARGS__)
+#define EXPECT(...)     _TEST_MACRO_MAP2(__VA_ARGS__, _TEST_EXPECT2, _TEST_EXPECT1)(__VA_ARGS__)
 // clang-format on
 
 

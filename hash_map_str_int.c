@@ -7,14 +7,14 @@
 
 #include "hash.h"
 
-#ifndef ASSERT_MESSAGE
-#define ASSERT_MESSAGE(expr, msg) assert(expr)
-#endif  // ASSERT_MESSAGE
+#ifndef ASSERT
+#define ASSERT(expr, msg) assert(expr)
+#endif // ASSERT
 
 static void* hash_map_str_int_entry_key(struct hash_trait* trait, struct hash_node* node)
 {
-    ASSERT_MESSAGE((NULL != trait), "由外部保证 trait 参数的有效性");
-    ASSERT_MESSAGE((NULL != node), "由外部保证 node 参数的有效性");
+    ASSERT((NULL != trait), "由外部保证 trait 参数的有效性");
+    ASSERT((NULL != node), "由外部保证 node 参数的有效性");
 
     struct hash_map_str_int_entry* entry = (struct hash_map_str_int_entry*)node;
     return &(entry->key);
@@ -23,8 +23,8 @@ static void* hash_map_str_int_entry_key(struct hash_trait* trait, struct hash_no
 
 static uint32_t hash_map_str_int_entry_hash(struct hash_trait* trait, void* key)
 {
-    ASSERT_MESSAGE((NULL != trait), "由外部保证 trait 参数的有效性");
-    ASSERT_MESSAGE((NULL != key), "由外部保证 key.data 有效性");
+    ASSERT((NULL != trait), "由外部保证 trait 参数的有效性");
+    ASSERT((NULL != key), "由外部保证 key.data 有效性");
     struct hash_map_str_key* entry_key = (struct hash_map_str_key*)(key);
     return entry_key->hash;
 }
@@ -54,7 +54,7 @@ void hash_map_str_int_entry_del(struct hash_map_str_int_entry* entry)
 
 struct hash_map_str_key* hash_map_str_key_init(struct hash_map_str_key* key, char* str)
 {
-    ASSERT_MESSAGE((NULL != key), "key 必须由外部保证有效性");
+    ASSERT((NULL != key), "key 必须由外部保证有效性");
     str = (NULL == str) ? "" : str;
 
     size_t key_len = strlen(str) + 1;
@@ -71,7 +71,7 @@ struct hash_map_str_key* hash_map_str_key_init(struct hash_map_str_key* key, cha
 
 struct hash_map_str_key* hash_map_str_key_ref(struct hash_map_str_key* key, char* str)
 {
-    ASSERT_MESSAGE((NULL != key), "key 必须由外部保证有效性");
+    ASSERT((NULL != key), "key 必须由外部保证有效性");
     key->key = str;
     key->hash = DJB2Hash(str);
     return key;
