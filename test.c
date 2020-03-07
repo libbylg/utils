@@ -132,10 +132,10 @@ EXPORT_API void test_accessX(int (*callback)(void* ctx, struct test_t* test), vo
 EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), void* ctx)
 {
     struct test_t* curr = &(global_test_control.root);
-    struct test_t* endt = NULL;
+    struct test_t* endt = curr;
 
-    while (1) { //endt != curr
-        printf("//////%s\n", curr->name);
+    while (1) {
+        //        printf("//////%s\n", curr->name);
         int ret = callback(ctx, curr);
         if (0 != ret) {
             return;
@@ -153,7 +153,12 @@ EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), voi
             //  回到父节点
             curr = curr->parent;
 
-            // 如果已经回溯到最顶层了
+            // 如果已经回溯到最顶层了(1)
+            if (NULL == curr) {
+                return;
+            }
+
+            // 如果已经回溯到最顶层了(2)
             if (NULL == curr->parent) {
                 return;
             }
@@ -223,7 +228,7 @@ static int test_find_callback(void* c, struct test_t* t)
 
 EXPORT_API struct test_t* test_find(const char* name)
 {
-    printf("test_find: [%s]\n", name);
+    //    printf("test_find: [%s]\n", name);
     struct test_find_callback_context ctx = {name, NULL};
     test_access(test_find_callback, &ctx);
     return ctx.result;
@@ -270,21 +275,21 @@ EXPORT_API void test_event_set(struct test_t* t, test_event_t event)
 }
 
 
-static int test_event_wrap(struct test_t* t, int eventid, void* param)
+static int test_event_wrap(struct test_t* t, int action)
 {
     test_event_t event = test_event_get(t);
     if (NULL == event) {
         return 0;
     }
 
-    global_test_control.action = TEST_ACTION_SETUP;
+    global_test_control.action = action;
 
     int ret = setjmp(global_test_control.trap);
     if (0 != ret) {
         return -1;
     }
 
-    (*event)(&(t->context), eventid, param);
+    (*event)();
     return 0;
 }
 
@@ -307,7 +312,7 @@ static void test_run_test(struct test_t* t)
 {
     global_test_control.current = t;
 
-    int ret = test_event_wrap(t, TEST_ACTION_SETUP, NULL);
+    int ret = test_event_wrap(t, TEST_ACTION_SETUP);
     if (0 != ret) {
         test_message("", -1, TEST_MESSAGE_SETUP_FAIL, "", "");
         return;
@@ -318,7 +323,7 @@ static void test_run_test(struct test_t* t)
         test_message("", -1, TEST_MESSAGE_PASS, "", "");
     }
 
-    ret = test_event_wrap(t, TEST_ACTION_TEARDOWN, NULL);
+    ret = test_event_wrap(t, TEST_ACTION_TEARDOWN);
     if (0 != ret) {
         test_message("", -1, TEST_MESSAGE_TEARDOWN_FAIL, "", "");
     }
@@ -334,7 +339,7 @@ static int test_run_callback(void* c, struct test_t* t)
     struct test_run_callback_context* ctx = (struct test_run_callback_context*)c;
     if ((0 == (t->flags & TEST_FLAG_GROUP)) && (0 == test_wildcmp(ctx->group_pattern, t->parent->name))) {
         if (0 == test_wildcmp(ctx->group_pattern, t->name)) {
-            printf("running: %s\n", t->name);
+            //            printf("running: %s\n", t->name);
             test_run_test(t);
             return 0;
         }
@@ -351,7 +356,7 @@ EXPORT_API int test_run(const char* group_pattern, const char* test_pattern)
         test_pattern,
     };
 
-    printf("test_run: [%s/%s]\n", group_pattern, test_pattern);
+    //    printf("test_run: [%s/%s]\n", group_pattern, test_pattern);
     test_access(test_run_callback, &ctx);
     return 0;
 }

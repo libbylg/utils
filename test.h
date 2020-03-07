@@ -147,7 +147,7 @@ struct test_t {
 
 //----------------------------------------------------------------------------------------------------------------------
 // clang-format off
-//! `test_register` 函数用于将 `test` 对象 注册到名称为 `group` 的组下面.
+//! `test_register` 函数用于将 `test` 对象注册到名称为 `group` 的组下面.
 //! \param `test` 可以为一个"测试",也可以为一个"测试组". 
 //! \param `group` 如果指定为"", 表示注册到全局的测试组下面
 EXPORT_API struct test_t*   test_init(struct test_t* t, const char* name, test_proc_t proc, uint32_t flags);
