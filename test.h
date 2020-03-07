@@ -58,8 +58,8 @@ STATIC_ASSERT(sizeof(uint16_t) == 2, "check the size")
 
 //! Some flags for `test_t`.
 enum TEST_FLAG {
-    TEST_FLAG_GROUP = 0x0001,
-    TEST_FLAG_DYNAMIC = 0x8000,
+    TEST_FLAG_GROUP = 0x0001,   //! 测试组
+    TEST_FLAG_DYNAMIC = 0x8000, //! 动态资源
 };
 
 
@@ -150,7 +150,7 @@ struct test_t {
 //! `test_register` 函数用于将 `test` 对象 注册到名称为 `group` 的组下面.
 //! \param `test` 可以为一个"测试",也可以为一个"测试组". 
 //! \param `group` 如果指定为"", 表示注册到全局的测试组下面
-EXPORT_API struct test_t*   test_init(struct test_t* t, const char* name, test_proc_t proc);
+EXPORT_API struct test_t*   test_init(struct test_t* t, const char* name, test_proc_t proc, uint32_t flags);
 EXPORT_API int              test_register(struct test_t* t, const char* group);
 EXPORT_API struct test_t*   test_find(const char* name);
 EXPORT_API struct test_t*   test_self();
@@ -218,7 +218,7 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t TESTNAME##_target;                                                                            \
     _TEST_INITIALIZER(TESTNAME##_target_init)                                                                          \
     {                                                                                                                  \
-        test_register(test_init(&(TESTNAME##_target), #TESTNAME, (TESTNAME)), __FILE__);                               \
+        test_register(test_init(&(TESTNAME##_target), #TESTNAME, (TESTNAME), 0), __FILE__);                            \
     }                                                                                                                  \
     static void TESTNAME()
 
@@ -228,7 +228,7 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t TESTNAME##_target;                                                                            \
     _TEST_INITIALIZER(TESTNAME##_target_init)                                                                          \
     {                                                                                                                  \
-        test_register(test_init(&(TESTNAME##_target), #TESTNAME, (TESTNAME)), ((GROUP##_target).name));                \
+        test_register(test_init(&(TESTNAME##_target), #TESTNAME, (TESTNAME), 0), ((GROUP##_target).name));             \
     }                                                                                                                  \
     static void TESTNAME()
 
@@ -238,7 +238,7 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t GROUPNAME##_target;                                                                           \
     _TEST_INITIALIZER(GROUPNAME##_target_init)                                                                         \
     {                                                                                                                  \
-        test_register(test_init(&(GROUPNAME##_target), __FILE__, NULL), "");                                           \
+        test_register(test_init(&(GROUPNAME##_target), __FILE__, NULL, TEST_FLAG_GROUP), "");                          \
     }
 
 
@@ -246,7 +246,7 @@ EXPORT_API int              test_run(const char* group_pattern, const char* case
     static struct test_t GROUPNAME##_target;                                                                           \
     _TEST_INITIALIZER(GROUPNAME##_target_init)                                                                         \
     {                                                                                                                  \
-        test_register(test_init(&(GROUPNAME##_target), (GROUPSTR), NULL), "");                                         \
+        test_register(test_init(&(GROUPNAME##_target), (GROUPSTR), NULL, TEST_FLAG_GROUP), "");                        \
     }
 
 

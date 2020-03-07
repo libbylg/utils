@@ -27,18 +27,8 @@ static struct test_control_t global_test_control = {{0}};
 static void test_output_default(struct test_message_t* message);
 _TEST_INITIALIZER(global_test_group_init)
 {
-    global_test_control.root.next = &(global_test_control.root);
-    global_test_control.root.prev = &(global_test_control.root);
-    global_test_control.root.parent = NULL;
-    global_test_control.root.childs = NULL;
-    global_test_control.root.flags = TEST_FLAG_GROUP | TEST_FLAG_DYNAMIC;
-    global_test_control.root.name = "";
-    global_test_control.root.context = 0;
-    global_test_control.root.event = NULL;
-    global_test_control.root.proc = NULL;
-
+    test_init(&(global_test_control.root), "", NULL, TEST_FLAG_GROUP);
     global_test_control.current = NULL;
-
     global_test_control.output = test_output_default;
 }
 
@@ -89,14 +79,14 @@ static int test_wildcmp(const char* wild, const char* str)
 }
 
 
-EXPORT_API struct test_t* test_init(struct test_t* t, const char* name, test_proc_t proc)
+EXPORT_API struct test_t* test_init(struct test_t* t, const char* name, test_proc_t proc, uint32_t flags)
 {
-    t->next = NULL;
-    t->prev = NULL;
+    t->next = t;
+    t->prev = t;
     t->parent = NULL;
     t->childs = NULL;
     t->result = NULL;
-    t->flags = 0;
+    t->flags = flags;
     t->name = name;
     t->context = 0;
     t->event = NULL;
@@ -106,12 +96,9 @@ EXPORT_API struct test_t* test_init(struct test_t* t, const char* name, test_pro
 }
 
 
-EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), void* ctx)
+EXPORT_API void test_accessX(int (*callback)(void* ctx, struct test_t* test), void* ctx)
 {
-    if (NULL == global_test_control.root.childs) {
-        return;
-    }
-    struct test_t* curr = global_test_control.root.childs;
+    struct test_t* curr = &(global_test_control.root);
 
     while (curr != NULL) {
         int ret = callback(ctx, curr);
@@ -142,14 +129,53 @@ EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), voi
 }
 
 
+EXPORT_API void test_access(int (*callback)(void* ctx, struct test_t* test), void* ctx)
+{
+    struct test_t* curr = &(global_test_control.root);
+    struct test_t* endt = NULL;
+
+    while (1) { //endt != curr
+        printf("//////%s\n", curr->name);
+        int ret = callback(ctx, curr);
+        if (0 != ret) {
+            return;
+        }
+
+        //  如果有子节点,就优先进入子节点
+        if (NULL != curr->childs) {
+            curr = curr->childs;
+            endt = curr->prev;
+            continue;
+        }
+
+        // 如果当前层级没有下一个节点了,那么就回到上层继续看上层是否有下一个节点
+        while (endt == curr) {
+            //  回到父节点
+            curr = curr->parent;
+
+            // 如果已经回溯到最顶层了
+            if (NULL == curr->parent) {
+                return;
+            }
+
+            // 重新确定结束位置
+            endt = curr->parent->childs->prev;
+        }
+
+        //! 继续找下一个兄弟节点
+        curr = curr->next;
+    }
+}
+
+
 EXPORT_API int test_register(struct test_t* test, const char* groupName)
 {
     struct test_t* tgroup = test_find(groupName);
     if (NULL == tgroup) {
         tgroup = malloc(sizeof(struct test_t));
         // TODO tgroup null-check
-        tgroup->next = NULL;
-        tgroup->prev = NULL;
+        tgroup->next = tgroup;
+        tgroup->prev = tgroup;
         tgroup->parent = NULL;
         tgroup->childs = NULL;
         tgroup->flags = TEST_FLAG_GROUP | TEST_FLAG_DYNAMIC;
@@ -157,7 +183,7 @@ EXPORT_API int test_register(struct test_t* test, const char* groupName)
         tgroup->context = 0;
         tgroup->event = NULL;
         tgroup->proc = NULL;
-        test_register(tgroup, groupName);
+        test_register(tgroup, "");
     }
 
     if (NULL != tgroup->childs) {
@@ -197,6 +223,7 @@ static int test_find_callback(void* c, struct test_t* t)
 
 EXPORT_API struct test_t* test_find(const char* name)
 {
+    printf("test_find: [%s]\n", name);
     struct test_find_callback_context ctx = {name, NULL};
     test_access(test_find_callback, &ctx);
     return ctx.result;
@@ -261,6 +288,7 @@ static int test_event_wrap(struct test_t* t, int eventid, void* param)
     return 0;
 }
 
+
 static int test_proc_wrap(struct test_t* t)
 {
     global_test_control.action = TEST_ACTION_TESTING;
@@ -273,6 +301,7 @@ static int test_proc_wrap(struct test_t* t)
     (*(t->proc))();
     return 0;
 }
+
 
 static void test_run_test(struct test_t* t)
 {
@@ -322,6 +351,7 @@ EXPORT_API int test_run(const char* group_pattern, const char* test_pattern)
         test_pattern,
     };
 
+    printf("test_run: [%s/%s]\n", group_pattern, test_pattern);
     test_access(test_run_callback, &ctx);
     return 0;
 }

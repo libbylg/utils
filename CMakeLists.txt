@@ -38,7 +38,6 @@ add_executable(hash_map
     hash_map_str_int.h
     hash_map_str_int.c
     hash_map_test.c
-    hash_map_test.c.c
 
     )
 
