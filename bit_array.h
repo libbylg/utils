@@ -105,11 +105,11 @@ static inline struct bit_array_t* bit_array_init(struct bit_array_t* v, int bits
 }
 
 //static inline struct bit_array_t* bit_array_malloc(int bits_cap)
-#define bit_array_malloc(bits_cap) (bit_array_init((struct bit_array_t*)malloc(bit_array_memsize(bits_cap)), bits_cap))
+#define bit_array_malloc(bits_cap) (bit_array_init((struct bit_array_t*)malloc(bit_array_bytesof(bits_cap)), bits_cap))
 
 
 //static inline struct bit_array_t* bit_array_aclloca(int bit_cap)
-#define bit_array_alloca(bits_cap) (bit_array_init((struct bit_array_t*)alloca(bit_array_memsize(bits_cap)), bits_cap))
+#define bit_array_alloca(bits_cap) (bit_array_init((struct bit_array_t*)alloca(bit_array_bytesof(bits_cap)), bits_cap))
 
 static inline void bit_array_free(struct bit_array_t* v)
 {

@@ -28,76 +28,59 @@ SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -DTEST_AUTO_RUN)
 #    )
 
 
-add_executable(bitarray
-    ${UT_SRC}
+#add_executable(bitarray
+#    ${UT_SRC}
+#    exports.h
+#    bit_array.h
+#    bit_array_test.c
+#    macros.h
+#    #y.c
+#    )
+
+add_executable(utils
+    ########
+    test.h
+    test.c
+    #test_test.c
+
+    ########
     exports.h
+    macros.h
+
+    ########
     bit_array.h
     bit_array_test.c
-    macros.h
-    #y.c
-    )
 
-
-#add_executable(token
-#    #${UT_SRC}
+    ########
 #    token.h
 #    token.c
 #    token_test.c
-#    )
 
+    ########
+    hash_map.h
+    hash_map.c
+    hash.h
+    hash_map_str_int.h
+    hash_map_str_int.c
+    hash_map_test.c
 
-#add_executable(hash_map
-#    ${UT_SRC}
-#    hash_map.h
-#    hash_map.c
-#    hash.h
-#    hash_map_str_int.h
-#    hash_map_str_int.c
-#    hash_map_test.c
-#    )
+    list.h
+    list_test.c
 
+    panic.h
+    panic_test.c
 
-#add_executable(list_head
-#    ${UT_SRC}
-#    list.h
-#    list_test.c
-#    )
+    defer.h
+    defer_test.c
+    test.h
+    test.c
 
+    str.c
+    str.h
+    str_test.c
 
-#add_executable(panic
-#    panic.h
-#    panic_test.c
-#    )
-#target_include_directories(panic PRIVATE
-#    thirdparty/cmocka-ext/include
-#    )
+    filepath.h
+    filepath.c
+    filepath_test.c
+    )
 
-
-#add_executable(defer
-#    .clang-format
-#    defer.h
-#    defer_test.c
-#    test.h
-#    test.c
-#    str.c
-#    str.h
-#    str_test.c
-#    )
-
-#target_include_directories(defer PRIVATE
-#    thirdparty/cmocka-ext/include
-#    )
-
-#add_executable(filepath
-#    filepath.h
-#    filepath.c
-#    filepath_test.c
-#    )
-
-
-#add_executable(str
-#    ${UT_SRC}
-#    str.h
-#    str.c
-#    str_test.c
-#    )

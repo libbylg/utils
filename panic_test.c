@@ -1,32 +1,25 @@
 #include "panic.h"
+#include "test.h"
 
+static int bar_counter = 0;
+static int foo_counter = 0;
 static void bar()
 {
-    printf("bar enter\n");
-    defer(bar_defer, { printf("bar defer\n"); });
+    defer(bar_defer, { bar_counter++; });
     panic("123");
-    printf("bar leave\n");
 }
 
 static void foo()
 {
-    printf("foo enter\n");
-    defer(foo_defer, { printf("foo defer\n"); });
+    defer(bar_defer, { foo_counter++; });
+    defer(foo_defer, { foo_counter++; });
     bar();
-    printf("foo leave\n");
 }
 
 
-int main(int argc, char* argv[])
+TEST(Test_defer_1)
 {
-    int ret = 0;
-    if (0 == ret) {
-        printf("before foo\n");
-        foo();
-        printf("after  foo\n");
-    } else {
-        printf("catch  jump here\n");
-    }
-
-    return 0;
+    foo();
+    ASSERT(1 == bar_counter);
+    ASSERT(2 == foo_counter);
 }

@@ -3,6 +3,7 @@
 
 #include <setjmp.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 struct defer_list {
@@ -16,7 +17,8 @@ static struct defer_list top_defer;
 __thread static struct defer_list* last_defer = &top_defer;
 
 
-static void defer_init() __attribute__((constructor))
+static void defer_init() __attribute__((constructor));
+static void defer_init()
 {
     top_defer.parent = NULL;
     top_defer.error = &top_defer;

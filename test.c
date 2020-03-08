@@ -18,8 +18,18 @@ struct test_control_t {
 // clang-format on
 
 
-static const char* global_test_type_names[] = {"Pass",          "Setup failed", "Teardown failed", "Assert failed",
-                                               "Expect failed", "Catch fault",  "Memory leak"};
+static const char* global_test_type_names[] = {
+    "Testing pass",              //   TEST_MESSAGE_TESTING_PASS
+    "Testing fail",              //   TEST_MESSAGE_TESTING_FAIL
+    "Testing pass with warning", //   TEST_MESSAGE_TESTING_WARN
+    "Setup failed",              //   TEST_MESSAGE_SETUP_FAIL
+    "Teardown failed",           //   TEST_MESSAGE_TEARDOWN_FAIL
+    "Assert failed",             //   TEST_MESSAGE_ASSERT_FAIL
+    "Expect failed",             //   TEST_MESSAGE_EXPECT_FAIL
+    "Catch fault",               //   TEST_MESSAGE_CATCH_FAULT
+    "Memory leak",               //   TEST_MESSAGE_MEMORY_LEAK
+    "Internal error",            //   TEST_MESSAGE_INTERNAL_ERROR
+};
 
 static struct test_control_t global_test_control = {{0}};
 
@@ -300,6 +310,7 @@ static int test_proc_wrap(struct test_t* t)
 
     int ret = setjmp(global_test_control.trap);
     if (0 != ret) {
+        test_message("", -1, TEST_MESSAGE_TESTING_FAIL, "", "");
         return -1;
     }
 
@@ -312,20 +323,25 @@ static void test_run_test(struct test_t* t)
 {
     global_test_control.current = t;
 
-    int ret = test_event_wrap(t, TEST_ACTION_SETUP);
-    if (0 != ret) {
+    int setup_result = test_event_wrap(t, TEST_ACTION_SETUP);
+    if (0 != setup_result) {
         test_message("", -1, TEST_MESSAGE_SETUP_FAIL, "", "");
         return;
     }
 
     int proc_result = test_proc_wrap(t);
     if (0 != proc_result) {
-        test_message("", -1, TEST_MESSAGE_PASS, "", "");
+        test_message("", -1, TEST_MESSAGE_TEARDOWN_FAIL, "", "");
     }
 
-    ret = test_event_wrap(t, TEST_ACTION_TEARDOWN);
-    if (0 != ret) {
+    int teardown_result = test_event_wrap(t, TEST_ACTION_TEARDOWN);
+    if (0 != teardown_result) {
         test_message("", -1, TEST_MESSAGE_TEARDOWN_FAIL, "", "");
+        return;
+    }
+
+    if ((0 == setup_result) && (0 == proc_result) && (0 == teardown_result)) {
+        test_message("", -1, TEST_MESSAGE_TESTING_PASS, "", "");
     }
 }
 

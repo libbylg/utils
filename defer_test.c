@@ -16,24 +16,15 @@ static void foo()
 
 TEST_GROUP(hello2, "a.b.c");
 
-TEST_GROUP(hello);
 
-TEST(Test_Sample2, hello)
+TEST(hello2, Test_Sample2)
 {
     foo();
-    assert_true(counter == 2);
+    ASSERT(counter == 2);
 }
 
 TEST(Test_Sample)
 {
     foo();
-    assert_true(counter == 2);
-}
-
-
-int main(int argc, char* argv[])
-{
-    TEST_RUN();
-
-    return 0;
+    ASSERT(counter == 2);
 }
