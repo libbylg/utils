@@ -377,7 +377,7 @@ EXPORT_API void test_messagev(const char* file, int line, int type, const char* 
         len = 0;
     }
 
-    struct test_message_t* message = malloc(sizeof(struct test_message_t) + (len + 1));
+    struct test_message_t* message = (struct test_message_t*)malloc(sizeof(struct test_message_t) + (len + 1));
     message->next = message;
     message->prev = message;
     message->file = file;

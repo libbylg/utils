@@ -116,7 +116,7 @@ struct test_message_t {
     int                     line;
     uint16_t                type;
     uint16_t                len;
-    char*                   text;
+    char                    text[0];
 };
 // clang-format on
 

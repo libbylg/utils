@@ -142,7 +142,7 @@ static char* line_reader_fill(struct line_reader_t* r, char* pc)
             }
             memcpy(newBuf, r->line, (size_t)dataLen);
 
-            //  修改所有关联指针的到新位置，释放酒缓冲区，保存新缓冲区
+            //  修改所有关联指针的到新位置，释放旧缓冲区，保存新缓冲区
             long pcOffset = pc - r->line;
             long eolOffset = r->eol - r->line;
             free(r->buf);
