@@ -22,26 +22,18 @@ SET(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} -DTEST_AUTO_RUN)
 #add_executable(line_reader
 #    #${UT_SRC}
 #    exports.h
-#    line_reader.h
-#    line_reader.c
-#    line_reader_test.c
-#    )
+#
 
-
-#add_executable(bitarray
-#    ${UT_SRC}
-#    exports.h
-#    bit_array.h
-#    bit_array_test.c
-#    macros.h
-#    #y.c
-#    )
 
 add_executable(utils
     ########
     test.h
     test.c
     #test_test.c
+
+    line_reader.h
+    line_reader.c
+    line_reader_test.c
 
     ########
     exports.h
@@ -52,9 +44,9 @@ add_executable(utils
     bit_array_test.c
 
     ########
-#    token.h
-#    token.c
-#    token_test.c
+    token.h
+    token.c
+    token_test.c
 
     ########
     hash_map.h

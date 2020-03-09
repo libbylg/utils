@@ -3,7 +3,7 @@
 
 #include "token.h"
 
-int main(int argc, char* argv[])
+TEST(Test_token)
 {
     struct token_cache_t cache = {TOKEN_CACHE_CONTENT_LEN_DEF, TOKEN_CACHE_FORWARD_LEN_DEF};
 
