@@ -26,7 +26,7 @@ static void defer_init()
     int ret = setjmp(top_defer.jbuf);
     if (0 != ret) {
         //printf("defer_init - abort before\n");
-        abort();
+        //abort();
         //printf("defer_init - abort after\n");
     }
 }
