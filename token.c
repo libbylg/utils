@@ -377,7 +377,7 @@ TRY_AGAIN:
             goto TRY_AGAIN;
         } else {
             parser->pos = pc;  //  设置为全部识别完毕，避免不必要的数据迁移
-            pc = token_parser_fill_cache(parser, parser->cache->ahead);
+            pc = token_parser_fill_cache(parser, parser->cache->head);
 
             //  如果重新载入一次数据后，仍然没有有效数据，说明缓冲区已经空了
             if (parser->pos != parser->end) {

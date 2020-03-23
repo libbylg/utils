@@ -113,6 +113,7 @@ typedef void (*test_output_t)(struct test_message_t* message);
 struct test_message_t {
     struct test_message_t*  next;
     struct test_message_t*  prev;
+    struct test_t*          test;
     const char*             message;
     const char*             file;
     int                     line;

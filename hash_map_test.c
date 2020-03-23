@@ -13,12 +13,12 @@
 
 TEST_GROUP(group_normal)
 
-TEST_EVENT(group_normal, hash_test_event)
-{
-    printf("hash_test_event: %d\n", test_action());
-}
+//TEST_EVENT(group_normal, hash_test_event)
+//{
+//    printf("hash_test_event: %d\n", test_action());
+//}
 
-TEST(Test_Normal)
+TEST(Test_map1)
 {
     //  再初 hash_map
     struct hash_trait trait = {0};

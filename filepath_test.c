@@ -26,12 +26,12 @@
         free(t);                                                                                                       \
     }
 
-FILEPATH_TEST(root, "/", "/", "/")
-FILEPATH_TEST(normal, "/usr/lib", "/usr", "lib")
-FILEPATH_TEST(end_with_pathspr, "/usr/", "/", "usr")
-FILEPATH_TEST(file_in_root, "/usr", "/", "usr")
-FILEPATH_TEST(no_pathspr, "usr", ".", "usr")
-FILEPATH_TEST(cur, ".", ".", ".")
-FILEPATH_TEST(parent, "..", ".", "..")
-FILEPATH_TEST(relative, "usr/tm.f", "usr", "tm.f")
-FILEPATH_TEST(more_pathspr, "/usr///", "/", "usr")
+FILEPATH_TEST(Test_root, "/", "/", "/")
+FILEPATH_TEST(Test_normal, "/usr/lib", "/usr", "lib")
+FILEPATH_TEST(Test_end_with_pathspr, "/usr/", "/", "usr")
+FILEPATH_TEST(Test_file_in_root, "/usr", "/", "usr")
+FILEPATH_TEST(Test_no_pathspr, "usr", ".", "usr")
+FILEPATH_TEST(Test_cur, ".", ".", ".")
+FILEPATH_TEST(Test_parent, "..", ".", "..")
+FILEPATH_TEST(Test_relative, "usr/tm.f", "usr", "tm.f")
+FILEPATH_TEST(Test_more_pathspr, "/usr///", "/", "usr")

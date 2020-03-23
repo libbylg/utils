@@ -380,7 +380,8 @@ EXPORT_API int test_run(const char* group_pattern, const char* test_pattern)
 
 static void test_output_default(struct test_message_t* message)
 {
-    printf("%s(%d): [%s] %s\n", message->file, message->line, global_test_type_names[message->type], message->text);
+    printf("[%s]\n%s(%d): [%s] %s\n", message->test->name, message->file, message->line,
+           global_test_type_names[message->type], message->text);
 }
 
 
@@ -396,6 +397,7 @@ EXPORT_API void test_messagev(const char* file, int line, int type, const char* 
     struct test_message_t* message = (struct test_message_t*)malloc(sizeof(struct test_message_t) + (len + 1));
     message->next = message;
     message->prev = message;
+    message->test = global_test_control.current;
     message->file = file;
     message->message = msg;
     message->line = line;

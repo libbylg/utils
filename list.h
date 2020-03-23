@@ -87,7 +87,7 @@ static inline void list_swap(struct list_head* entry1, struct list_head* entry2)
 }
 
 
-static inline bool list_empty(struct list_head* n)
+static inline _Bool list_empty(struct list_head* n)
 {
     return n->next == n;
 }

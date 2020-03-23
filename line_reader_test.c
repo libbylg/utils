@@ -9,13 +9,16 @@
 
 #include <stdio.h>
 
+#include "test.h"
+
+
 static int line_reader_scan_callback_echo(void* ctx, struct line_reader_t* r)
 {
     printf("%.4ld [%s]\n", r->lino, r->line);
     return 0;
 }
 
-int main(int argc, char* argv[])
+TEST(Test_reader)
 {
     const char* file =
         "/Users/baidu/baidu/svn/navi-qa-dev/tool/"
@@ -26,12 +29,12 @@ int main(int argc, char* argv[])
     // 初始化
     int ret = line_reader_init(&r, 4096);
     if (0 != ret) {
-        return -1;
+        return;
     }
 
     ret = line_reader_open(&r, file);
     if (0 != ret) {
-        return -1;
+        return;
     }
 
     // 逐行读取
@@ -45,5 +48,5 @@ int main(int argc, char* argv[])
 
     // 销毁
     line_reader_destroy(&r);
-    return 0;
+    return;
 }
