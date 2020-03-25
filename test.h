@@ -62,19 +62,25 @@ enum TEST_FLAG {
     TEST_FLAG_DYNAMIC = 0x8000, //! 动态资源
 };
 
+#define _TEST_MESSAGE_DEFINES()                                                                                        \
+    DEF_MSG(TEST_MESSAGE_TESTING_PASS, 0, "PASS")                                                                      \
+    DEF_MSG(TEST_MESSAGE_TESTING_FAIL, 1, "FAIL")                                                                      \
+    DEF_MSG(TEST_MESSAGE_TESTING_WARN, 2, "WARN")                                                                      \
+    DEF_MSG(TEST_MESSAGE_TESTING_ENTER, 3, "ENTER")                                                                    \
+    DEF_MSG(TEST_MESSAGE_TESTING_LEAVE, 4, "LEAVE")                                                                    \
+    DEF_MSG(TEST_MESSAGE_SETUP_FAIL, 5, "SETUP-FAIL")                                                                  \
+    DEF_MSG(TEST_MESSAGE_TEARDOWN_FAIL, 6, "TEARDOWN-FAIL")                                                            \
+    DEF_MSG(TEST_MESSAGE_ASSERT_FAIL, 7, "ASSERT-FAIL")                                                                \
+    DEF_MSG(TEST_MESSAGE_EXPECT_FAIL, 8, "EXPECT-FAIL")                                                                \
+    DEF_MSG(TEST_MESSAGE_CATCH_FAULT, 9, "CATCH-FAULT")                                                                \
+    DEF_MSG(TEST_MESSAGE_MEMORY_LEAK, 10, "MEMORY-LEAK")                                                               \
+    DEF_MSG(TEST_MESSAGE_INTERNAL_ERROR, 11, "INTERNAL-ERROR")
 
 //! The message type for testing.
 enum TEST_MESSAGE {
-    TEST_MESSAGE_TESTING_PASS = 0,
-    TEST_MESSAGE_TESTING_FAIL = 1,
-    TEST_MESSAGE_TESTING_WARN = 2,
-    TEST_MESSAGE_SETUP_FAIL = 3,
-    TEST_MESSAGE_TEARDOWN_FAIL = 4,
-    TEST_MESSAGE_ASSERT_FAIL = 5,
-    TEST_MESSAGE_EXPECT_FAIL = 6,
-    TEST_MESSAGE_CATCH_FAULT = 7,
-    TEST_MESSAGE_MEMORY_LEAK = 8,
-    TEST_MESSAGE_INTERNAL_ERROR = 9,
+#define DEF_MSG(name, id, desc) name = id,
+    _TEST_MESSAGE_DEFINES()
+#undef DEF_MSG
 };
 
 

@@ -19,16 +19,9 @@ struct test_control_t {
 
 
 static const char* global_test_type_names[] = {
-    "Testing pass",              //   TEST_MESSAGE_TESTING_PASS
-    "Testing fail",              //   TEST_MESSAGE_TESTING_FAIL
-    "Testing pass with warning", //   TEST_MESSAGE_TESTING_WARN
-    "Setup failed",              //   TEST_MESSAGE_SETUP_FAIL
-    "Teardown failed",           //   TEST_MESSAGE_TEARDOWN_FAIL
-    "Assert failed",             //   TEST_MESSAGE_ASSERT_FAIL
-    "Expect failed",             //   TEST_MESSAGE_EXPECT_FAIL
-    "Catch fault",               //   TEST_MESSAGE_CATCH_FAULT
-    "Memory leak",               //   TEST_MESSAGE_MEMORY_LEAK
-    "Internal error",            //   TEST_MESSAGE_INTERNAL_ERROR
+#define DEF_MSG(name, id, desc) desc,
+    _TEST_MESSAGE_DEFINES()
+#undef DEF_MSG
 };
 
 static struct test_control_t global_test_control = {{0}};
@@ -319,10 +312,8 @@ static int test_proc_wrap(struct test_t* t)
 }
 
 
-static void test_run_test(struct test_t* t)
+static void test_run_test_impl(struct test_t* t)
 {
-    global_test_control.current = t;
-
     int setup_result = test_event_wrap(t, TEST_ACTION_SETUP);
     if (0 != setup_result) {
         test_message("", -1, TEST_MESSAGE_SETUP_FAIL, "", "");
@@ -343,6 +334,15 @@ static void test_run_test(struct test_t* t)
     if ((0 == setup_result) && (0 == proc_result) && (0 == teardown_result)) {
         test_message("", -1, TEST_MESSAGE_TESTING_PASS, "", "");
     }
+}
+
+
+static void test_run_test(struct test_t* t)
+{
+    global_test_control.current = t;
+    test_message("", -1, TEST_MESSAGE_TESTING_ENTER, "----", "");
+    test_run_test_impl(t);
+    test_message("", -1, TEST_MESSAGE_TESTING_LEAVE, "====", "");
 }
 
 struct test_run_callback_context {
@@ -380,8 +380,17 @@ EXPORT_API int test_run(const char* group_pattern, const char* test_pattern)
 
 static void test_output_default(struct test_message_t* message)
 {
-    printf("[%s]\n%s(%d): [%s] %s\n", message->test->name, message->file, message->line,
-           global_test_type_names[message->type], message->text);
+    if (message->line < 0) {
+        if (message->text[0]) {
+            printf("[%s][%s] %s : %s\n", message->test->name, global_test_type_names[message->type], message->message,
+                   message->text);
+        } else {
+            printf("[%s][%s] %s\n", message->test->name, global_test_type_names[message->type], message->message);
+        }
+    } else {
+        printf("[%s][%s] %s(%d): %s : %s\n", message->test->name, global_test_type_names[message->type], message->file,
+               message->line, message->message, message->text);
+    }
 }
 
 

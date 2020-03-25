@@ -22,17 +22,24 @@ static void foo()
 
 TEST_GROUP(hello2, "a.b.c");
 
+TEST_EVENT(hello2, Event_Sample)
+{
+    enum TEST_ACTION a = test_action();
+    if (a == TEST_ACTION_SETUP) {
+        counter = 0;
+    }
+}
 
 TEST(hello2, Test_Sample2)
 {
-    printf("Test_Sample2\n");
+    printf("begin Test_Sample2\n");
     foo();
     ASSERT(counter == 2);
 }
 
 TEST(Test_Sample)
 {
-    printf("Test_Sample\n");
+    printf("begin Test_Sample\n");
     foo();
     ASSERT(counter == 2);
 }
